@@ -14,32 +14,31 @@ class Command(BaseCommand):
         
         # 1. Criar Tipos de Material
         self.stdout.write('Criando tipos de material...')
-        # Formato: (nome, codigo, ordem, batidas, batidas_2densidade)
+        # Formato: (nome, codigo, ordem)
         materiais = [
-            ('Tafetá', 'TAFETA', 1, 20, 28),           # Baseado na planilha: J23=20, J25=28
-            ('Sarja', 'SARJA', 2, 20, None),            # Assumindo padrão similar
-            ('Alta Definição', 'ALTA_DEF', 3, 20, None),
-            ('Dupla Densidade', 'DUPLA_DENS', 4, 20, 28),  # Material de dupla densidade
-            ('Super Batidas', 'SUPER_BAT', 5, 30, None),   # Nome sugere mais batidas
-            ('Canvas', 'CANVAS', 6, 20, None),
-            ('Cetim', 'CETIM', 7, 20, None),
-            ('SuperSoft', 'SUPERSOFT', 8, 20, None),
+            ('Tafetá', 'TAFETA', 1),
+            ('Sarja', 'SARJA', 2),
+            ('Alta Definição', 'ALTA_DEF', 3),
+            ('Dupla Densidade', 'DUPLA_DENS', 4),
+            ('Super Batidas', 'SUPER_BAT', 5),
+            ('Canvas', 'CANVAS', 6),
+            ('Cetim', 'CETIM', 7),
+            ('SuperSoft', 'SUPERSOFT', 8),
         ]
         
-        for nome, codigo, ordem, batidas, batidas_2d in materiais:
+        for nome, codigo, ordem in materiais:
             material, created = TipoMaterial.objects.update_or_create(
                 codigo=codigo,
                 defaults={
                     'nome': nome,
                     'ordem': ordem,
-                    'batidas': batidas,
-                    'batidas_2densidade': batidas_2d
+                    'ativo': True,
                 }
             )
             if created:
-                self.stdout.write(f'  [+] Criado: {nome} (batidas: {batidas}{"/" + str(batidas_2d) if batidas_2d else ""})')
+                self.stdout.write(f'  [+] Criado: {nome}')
             else:
-                self.stdout.write(f'  [~] Atualizado: {nome} (batidas: {batidas}{"/" + str(batidas_2d) if batidas_2d else ""})')
+                self.stdout.write(f'  [~] Atualizado: {nome}')
         
         # 2. Criar Tipos de Corte
         self.stdout.write('Criando tipos de corte...')
