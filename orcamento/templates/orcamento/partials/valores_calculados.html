@@ -1,0 +1,75 @@
+<div id="valores-calculados" class="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border-2 border-green-200">
+    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+        <svg class="w-6 h-6 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        Valores Calculados
+    </h3>
+    
+    <!-- Informações Calculadas -->
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <p class="text-xs text-gray-600 mb-1">Unidades (calculado)</p>
+            <p class="text-lg font-bold text-yellow-700" id="unidades-display">{{ valores.unidades|floatformat:0 }}</p>
+        </div>
+        
+        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <p class="text-xs text-gray-600 mb-1">Milheiros</p>
+            <p class="text-lg font-bold text-yellow-700" id="milheiros-display">{{ valores.milheiros|floatformat:2 }}</p>
+        </div>
+        
+        <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <p class="text-xs text-gray-600 mb-1">Área Etiqueta</p>
+            <p class="text-lg font-bold text-yellow-700">{{ valores.area_m2|floatformat:6 }} m²</p>
+        </div>
+    </div>
+    
+    <!-- Script para atualizar também os campos na seção de Quantidades -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const unidadesCalc = document.getElementById('unidades-display');
+        const milheirosCalc = document.getElementById('milheiros-display');
+        const unidadesField = document.getElementById('unidades-calculadas');
+        const milheirosField = document.getElementById('milheiros-calculados');
+        
+        if (unidadesCalc && unidadesField) {
+            unidadesField.textContent = unidadesCalc.textContent;
+        }
+        if (milheirosCalc && milheirosField) {
+            milheirosField.textContent = milheirosCalc.textContent;
+        }
+    });
+    </script>
+    
+    <!-- Valores Monetários -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-sm text-gray-600 mb-1">Valor/Unidade</p>
+            <p class="text-xl font-bold text-indigo-600">R$ {{ valores.valor_unidade|floatformat:5 }}</p>
+            <p class="text-xs text-gray-500 mt-1">Calculado 1º</p>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-sm text-gray-600 mb-1">Valor/Metro</p>
+            <p class="text-xl font-bold text-blue-600">R$ {{ valores.valor_metro|floatformat:5 }}</p>
+            <p class="text-xs text-gray-500 mt-1">= Total / Metros</p>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow">
+            <p class="text-sm text-gray-600 mb-1">Valor/Milheiro</p>
+            <p class="text-xl font-bold text-purple-600">R$ {{ valores.valor_milheiro|floatformat:2 }}</p>
+            <p class="text-xs text-gray-500 mt-1">= Total / Milheiros</p>
+        </div>
+        
+        <div class="bg-white p-4 rounded-lg shadow border-2 border-green-400">
+            <p class="text-sm text-gray-600 mb-1 font-semibold">VALOR TOTAL</p>
+            <p class="text-3xl font-bold text-green-600">R$ {{ valores.valor_total|floatformat:2 }}</p>
+            <p class="text-xs text-gray-500 mt-1">= Unid × Unidades</p>
+        </div>
+    </div>
+    
+    <!-- Debug Info -->
+    <div class="mt-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
+        <p><strong>Base:</strong> R$ {{ valores.preco_base|floatformat:5 }} × CF: {{ valores.coef_fator|floatformat:3 }} + Goma: R$ {{ valores.valor_goma|floatformat:5 }} × CC: {{ valores.cc|floatformat:3 }}</p>
+    </div>
+</div>

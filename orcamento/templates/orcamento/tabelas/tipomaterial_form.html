@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.nome|default:'Novo Material' }} - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">
+            {% if object %}✏️ Editar Material{% else %}➕ Novo Material{% endif %}
+        </h1>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                <div class="flex">
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">Por favor, corrija os erros abaixo.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nome do Material *</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nome.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Código *</label>
+                    {{ form.codigo }}
+                    {% if form.codigo.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.codigo.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ordem de Exibição</label>
+                    {{ form.ordem }}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="flex items-center">
+                        {{ form.ativo }}
+                        <span class="ml-2 text-sm font-medium text-gray-700">Material ativo no sistema</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center pt-6 border-t">
+                <a href="{% url 'orcamento:tipomaterial_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    ← Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold">
+                    💾 Salvar Material
+                </button>
+            </div>
+        </form>
+        
+        {% if object %}
+        <div class="mt-8 pt-8 border-t">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">Batidas deste Material</h2>
+            <div class="space-y-2">
+                {% for batida in batidas %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span class="font-medium">{{ batida.numero_batidas }} batidas</span>
+                    <a href="{% url 'orcamento:batida_update' batida.pk %}" class="text-blue-600 hover:text-blue-800">Editar</a>
+                </div>
+                {% empty %}
+                <p class="text-gray-500">Nenhuma batida cadastrada para este material.</p>
+                {% endfor %}
+            </div>
+            <a href="{% url 'orcamento:batida_create' %}?material={{ object.pk }}" class="mt-4 inline-block text-blue-600 hover:text-blue-800">
+                + Adicionar Batida
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

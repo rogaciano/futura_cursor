@@ -1,0 +1,185 @@
+{% load orcamento_filters %}
+
+<!-- Exibição de Cores/Variantes -->
+<div class="bg-white p-6 rounded-lg shadow-md">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+        Cores/Variantes
+        {% if orcamento.is_dupla_densidade %}
+            <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                Dupla Densidade
+            </span>
+        {% endif %}
+    </h3>
+    
+    <!-- Cor do Urdume -->
+    {% if orcamento.cor_urdume and orcamento.cor_urdume != 'nenhum' %}
+    <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+        <p class="text-sm text-gray-600">Cor do Urdume:</p>
+        <p class="text-lg font-semibold text-gray-800">{{ orcamento.get_cor_urdume_display }}</p>
+    </div>
+    {% endif %}
+    
+    {% if orcamento.cores.exists %}
+        <!-- 1ª Densidade -->
+        {% with cores1=orcamento.cores.filter|densidade:'1' %}
+        {% if cores1 %}
+        <div class="mb-6">
+            <h4 class="text-md font-semibold text-gray-700 mb-3">
+                {% if orcamento.is_dupla_densidade %}1ª Densidade{% else %}Cores{% endif %}
+            </h4>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cor</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unidades</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">+ Demais</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for cor in cores1 %}
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ cor.get_posicao_display }}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
+                                <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded font-mono">
+                                    {{ cor.codigo_cor }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700">
+                                {{ cor.quantidade_unidades }}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700">
+                                {{ cor.quantidade_demais }}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                                {{ cor.total_unidades }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="bg-yellow-50 font-semibold">
+                            <td colspan="2" class="px-4 py-2 text-sm text-gray-700">Total:</td>
+                            <td class="px-4 py-2 text-sm text-right text-blue-600">
+                                {{ cores1|sum_field:'quantidade_unidades' }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-right text-blue-600">
+                                {{ cores1|sum_field:'quantidade_demais' }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-right text-green-600 font-bold">
+                                {{ cores1|sum_field:'total_unidades' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <!-- 2ª Densidade (se for Dupla Densidade) -->
+        {% if orcamento.is_dupla_densidade %}
+        {% with cores2=orcamento.cores.filter|densidade:'2' %}
+        {% if cores2 %}
+        <div class="mb-6">
+            <h4 class="text-md font-semibold text-gray-700 mb-3">2ª Densidade</h4>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cor</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Unidades</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">+ Demais</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for cor in cores2 %}
+                        <tr>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {{ cor.get_posicao_display }}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700">
+                                <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded font-mono">
+                                    {{ cor.codigo_cor }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700">
+                                {{ cor.quantidade_unidades }}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700">
+                                {{ cor.quantidade_demais }}
+                            </td>
+                            <td class="px-4 py-2 whitespace-nowrap text-sm text-right font-semibold text-gray-900">
+                                {{ cor.total_unidades }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr class="bg-yellow-50 font-semibold">
+                            <td colspan="2" class="px-4 py-2 text-sm text-gray-700">Total:</td>
+                            <td class="px-4 py-2 text-sm text-right text-blue-600">
+                                {{ cores2|sum_field:'quantidade_unidades' }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-right text-blue-600">
+                                {{ cores2|sum_field:'quantidade_demais' }}
+                            </td>
+                            <td class="px-4 py-2 text-sm text-right text-green-600 font-bold">
+                                {{ cores2|sum_field:'total_unidades' }}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Total Geral -->
+        <div class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p class="text-sm text-gray-600">Total Unidades:</p>
+                    <p class="text-2xl font-bold text-green-700">
+                        {% widthratio cores1|sum_field:'quantidade_unidades' 1 1 as total1_unid %}
+                        {% widthratio cores2|sum_field:'quantidade_unidades' 1 1 as total2_unid %}
+                        {{ total1_unid|add:total2_unid }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Total Demais:</p>
+                    <p class="text-2xl font-bold text-green-700">
+                        {% widthratio cores1|sum_field:'quantidade_demais' 1 1 as total1_demais %}
+                        {% widthratio cores2|sum_field:'quantidade_demais' 1 1 as total2_demais %}
+                        {{ total1_demais|add:total2_demais }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">TOTAL GERAL:</p>
+                    <p class="text-3xl font-bold text-green-700">
+                        {% widthratio cores1|sum_field:'total_unidades' 1 1 as total1 %}
+                        {% widthratio cores2|sum_field:'total_unidades' 1 1 as total2 %}
+                        {{ total1|add:total2 }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% endif %}
+        
+    {% else %}
+        <div class="text-center py-8 text-gray-500">
+            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 4 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+            </svg>
+            <p>Nenhuma cor cadastrada para este orçamento</p>
+        </div>
+    {% endif %}
+</div>
+

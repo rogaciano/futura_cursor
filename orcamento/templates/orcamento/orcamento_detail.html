@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}Orçamento {{ orcamento.numero_pedido }} - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Orçamento #{{ orcamento.numero_pedido|default:"S/N" }}</h1>
+                <p class="text-gray-600">Criado em {{ orcamento.data_emissao|date:"d/m/Y" }}</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    ✏️ Editar
+                </a>
+                <a href="{% url 'orcamento:orcamento_list' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
+                    ← Voltar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dados do Cliente -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Dados do Cliente</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-500">Cliente</label>
+                <p class="text-gray-900 font-medium">{{ orcamento.cliente }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Tipo de Cliente</label>
+                <p class="text-gray-900">{{ orcamento.get_tipo_cliente_display }}</p>
+            </div>
+            {% if orcamento.telefone %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">Telefone</label>
+                <p class="text-gray-900">{{ orcamento.telefone }}</p>
+            </div>
+            {% endif %}
+            {% if orcamento.email %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">E-mail</label>
+                <p class="text-gray-900">{{ orcamento.email }}</p>
+            </div>
+            {% endif %}
+            {% if orcamento.endereco %}
+            <div class="md:col-span-2">
+                <label class="text-sm font-medium text-gray-500">Endereço</label>
+                <p class="text-gray-900">{{ orcamento.endereco }}</p>
+            </div>
+            {% endif %}
+            {% if orcamento.cidade %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">Cidade/UF</label>
+                <p class="text-gray-900">{{ orcamento.cidade }}{% if orcamento.uf %} - {{ orcamento.uf }}{% endif %}</p>
+            </div>
+            {% endif %}
+            {% if orcamento.vendedor %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">Vendedor</label>
+                <p class="text-gray-900">{{ orcamento.vendedor }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Especificações do Produto -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Especificações do Produto</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+                <label class="text-sm font-medium text-gray-500">Tipo de Material</label>
+                <p class="text-gray-900 font-medium">
+                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        {{ orcamento.tipo_material.nome }}
+                    </span>
+                </p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Dimensões</label>
+                <p class="text-gray-900 font-medium">{{ orcamento.largura_mm }} × {{ orcamento.comprimento_mm }} mm</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Tipo de Corte</label>
+                <p class="text-gray-900">{{ orcamento.tipo_corte.nome }}</p>
+            </div>
+            <div>
+                <label class="text-sm font-medium text-gray-500">Cor do Urdume</label>
+                <p class="text-gray-900">{{ orcamento.get_cor_urdume_display }}</p>
+            </div>
+            {% if orcamento.marca %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">Marca</label>
+                <p class="text-gray-900">{{ orcamento.marca }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quantidades e Opções -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Quantidades</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Metros</span>
+                    <span class="text-gray-900 font-semibold">{{ orcamento.quantidade_metros }} m</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Unidades</span>
+                    <span class="text-gray-900 font-semibold">{{ orcamento.quantidade_unidades|floatformat:0 }} un.</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Milheiros</span>
+                    <span class="text-gray-900 font-semibold">{{ orcamento.milheiros|floatformat:2 }}</span>
+                </div>
+                {% if orcamento.tabela_manual_metragem %}
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Tabela Selecionada</span>
+                    <span class="text-gray-900 font-semibold">{{ orcamento.tabela_manual_metragem }} m</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Opções</h2>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Goma</span>
+                    <span class="{% if orcamento.tem_goma %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
+                        {% if orcamento.tem_goma %}
+                            ✓ {{ orcamento.get_tipo_goma_display }}
+                        {% else %}
+                            ✗ Não possui
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Corte Ultrassônico</span>
+                    <span class="{% if orcamento.tem_ultrassonico %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
+                        {% if orcamento.tem_ultrassonico %}✓ Sim{% else %}✗ Não{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Valores -->
+    <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-md p-6 border-2 border-green-200">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Valores</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg p-4 shadow">
+                <p class="text-sm text-gray-600 mb-1">Valor por Metro</p>
+                <p class="text-2xl font-bold text-blue-600">R$ {{ orcamento.valor_metro|floatformat:5 }}</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow">
+                <p class="text-sm text-gray-600 mb-1">Valor do Milheiro</p>
+                <p class="text-2xl font-bold text-purple-600">R$ {{ orcamento.valor_milheiro|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow">
+                <p class="text-sm text-gray-600 mb-1">Valor por Unidade</p>
+                <p class="text-2xl font-bold text-orange-600">R$ {{ orcamento.valor_unidade|floatformat:5 }}</p>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow border-2 border-green-400">
+                <p class="text-sm text-gray-600 mb-1">Valor Total</p>
+                <p class="text-3xl font-bold text-green-600">R$ {{ orcamento.valor_total|floatformat:2 }}</p>
+            </div>
+        </div>
+        
+        {% if orcamento.valor_frete %}
+        <div class="mt-4 bg-white rounded-lg p-4 shadow">
+            <div class="flex justify-between items-center">
+                <span class="text-gray-600">Frete</span>
+                <span class="text-xl font-bold text-blue-600">R$ {{ orcamento.valor_frete|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between items-center mt-2 pt-2 border-t">
+                <span class="text-gray-800 font-semibold">Total com Frete</span>
+                <span class="text-2xl font-bold text-green-600">R$ {{ orcamento.valor_total|add:orcamento.valor_frete|floatformat:2 }}</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Cores/Variantes -->
+    {% include 'orcamento/partials/cores_display.html' %}
+    
+    <!-- Observações -->
+    {% if orcamento.observacoes %}
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Observações</h2>
+        <p class="text-gray-700 whitespace-pre-line">{{ orcamento.observacoes }}</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

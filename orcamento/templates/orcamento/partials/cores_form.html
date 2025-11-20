@@ -1,0 +1,340 @@
+<!-- Seção de Cores/Variantes -->
+<div class="bg-white p-6 rounded-lg shadow-md" x-data="coresManager()">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        </svg>
+        Cores/Variantes
+        <span x-show="isDuplaDensidade" class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+            Dupla Densidade
+        </span>
+    </h3>
+    
+    <!-- Cor do Urdume -->
+    <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+            Cor do Urdume
+        </label>
+        <select 
+            name="cor_urdume"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        >
+            <option value="nenhum">Nenhum</option>
+            <option value="branco">Branco</option>
+            <option value="preto">Preto</option>
+            <option value="branco_preto">Branco e Preto</option>
+            <option value="vermelho">Vermelho</option>
+        </select>
+    </div>
+    
+    <!-- Tabela de Cores - 1ª Densidade -->
+    <div class="mb-6">
+        <h4 class="text-md font-semibold text-gray-700 mb-3">
+            <span x-show="!isDuplaDensidade">Cores</span>
+            <span x-show="isDuplaDensidade">1ª Densidade</span>
+        </h4>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cor</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">+ Demais</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th class="px-3 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="(cor, index) in cores1" :key="index">
+                        <tr>
+                            <td class="px-3 py-2">
+                                <select 
+                                    x-model="cor.posicao"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                >
+                                    <option value="Fd">Fd (Fundo)</option>
+                                    <option value="1">1ª</option>
+                                    <option value="2">2ª</option>
+                                    <option value="3">3ª</option>
+                                    <option value="4">4ª</option>
+                                    <option value="5">5ª</option>
+                                    <option value="6">6ª</option>
+                                    <option value="7">7ª</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <input 
+                                    type="text"
+                                    x-model="cor.codigo"
+                                    placeholder="Ex: F01, T30"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                            </td>
+                            <td class="px-3 py-2">
+                                <input 
+                                    type="number"
+                                    x-model.number="cor.unidades"
+                                    min="0"
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                            </td>
+                            <td class="px-3 py-2">
+                                <input 
+                                    type="number"
+                                    x-model.number="cor.demais"
+                                    min="0"
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                            </td>
+                            <td class="px-3 py-2">
+                                <span class="font-semibold text-gray-700" x-text="cor.unidades + cor.demais"></span>
+                            </td>
+                            <td class="px-3 py-2">
+                                <button 
+                                    type="button"
+                                    @click="removerCor1(index)"
+                                    class="text-red-600 hover:text-red-800"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr class="bg-yellow-50">
+                        <td colspan="2" class="px-3 py-2 font-semibold text-gray-700">Total 1ª Densidade:</td>
+                        <td class="px-3 py-2 font-bold text-blue-600" x-text="totalUnidades1"></td>
+                        <td class="px-3 py-2 font-bold text-blue-600" x-text="totalDemais1"></td>
+                        <td class="px-3 py-2 font-bold text-green-600" x-text="totalGeral1"></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <button 
+            type="button"
+            @click="adicionarCor1()"
+            class="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+        >
+            + Adicionar Cor
+        </button>
+    </div>
+    
+    <!-- Tabela de Cores - 2ª Densidade (apenas se for Dupla Densidade) -->
+    <div x-show="isDuplaDensidade" class="mb-6">
+        <h4 class="text-md font-semibold text-gray-700 mb-3">2ª Densidade</h4>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Cor</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Código</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unidades</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">+ Demais</th>
+                        <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th class="px-3 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="(cor, index) in cores2" :key="index">
+                        <tr>
+                            <td class="px-3 py-2">
+                                <select 
+                                    x-model="cor.posicao"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                >
+                                    <option value="Fd">Fd (Fundo)</option>
+                                    <option value="1">1ª</option>
+                                    <option value="2">2ª</option>
+                                    <option value="3">3ª</option>
+                                    <option value="4">4ª</option>
+                                    <option value="5">5ª</option>
+                                    <option value="6">6ª</option>
+                                    <option value="7">7ª</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-2">
+                                <input 
+                                    type="text"
+                                    x-model="cor.codigo"
+                                    placeholder="Ex: F01, T30"
+                                    class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                            </td>
+                            <td class="px-3 py-2">
+                                <input 
+                                    type="number"
+                                    x-model.number="cor.unidades"
+                                    min="0"
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                            </td>
+                            <td class="px-3 py-2">
+                                <input 
+                                    type="number"
+                                    x-model.number="cor.demais"
+                                    min="0"
+                                    class="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                />
+                            </td>
+                            <td class="px-3 py-2">
+                                <span class="font-semibold text-gray-700" x-text="cor.unidades + cor.demais"></span>
+                            </td>
+                            <td class="px-3 py-2">
+                                <button 
+                                    type="button"
+                                    @click="removerCor2(index)"
+                                    class="text-red-600 hover:text-red-800"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr class="bg-yellow-50">
+                        <td colspan="2" class="px-3 py-2 font-semibold text-gray-700">Total 2ª Densidade:</td>
+                        <td class="px-3 py-2 font-bold text-blue-600" x-text="totalUnidades2"></td>
+                        <td class="px-3 py-2 font-bold text-blue-600" x-text="totalDemais2"></td>
+                        <td class="px-3 py-2 font-bold text-green-600" x-text="totalGeral2"></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <button 
+            type="button"
+            @click="adicionarCor2()"
+            class="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm"
+        >
+            + Adicionar Cor (2ª Densidade)
+        </button>
+    </div>
+    
+    <!-- Total Geral (se for Dupla Densidade) -->
+    <div x-show="isDuplaDensidade" class="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+        <div class="grid grid-cols-3 gap-4">
+            <div>
+                <p class="text-sm text-gray-600">Total Unidades:</p>
+                <p class="text-2xl font-bold text-green-700" x-text="totalUnidades1 + totalUnidades2"></p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Total Demais:</p>
+                <p class="text-2xl font-bold text-green-700" x-text="totalDemais1 + totalDemais2"></p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">TOTAL GERAL:</p>
+                <p class="text-3xl font-bold text-green-700" x-text="totalGeral1 + totalGeral2"></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Campos hidden para envio do formulário -->
+    <input type="hidden" name="cores_data" :value="JSON.stringify({cores1, cores2})">
+</div>
+
+<script>
+function coresManager() {
+    return {
+        cores1: [
+            { posicao: 'Fd', codigo: '', unidades: 0, demais: 0 }
+        ],
+        cores2: [
+            { posicao: 'Fd', codigo: '', unidades: 0, demais: 0 }
+        ],
+        isDuplaDensidade: false,
+        
+        get totalUnidades1() {
+            return this.cores1.reduce((sum, cor) => sum + (cor.unidades || 0), 0);
+        },
+        
+        get totalDemais1() {
+            return this.cores1.reduce((sum, cor) => sum + (cor.demais || 0), 0);
+        },
+        
+        get totalGeral1() {
+            return this.totalUnidades1 + this.totalDemais1;
+        },
+        
+        get totalUnidades2() {
+            return this.cores2.reduce((sum, cor) => sum + (cor.unidades || 0), 0);
+        },
+        
+        get totalDemais2() {
+            return this.cores2.reduce((sum, cor) => sum + (cor.demais || 0), 0);
+        },
+        
+        get totalGeral2() {
+            return this.totalUnidades2 + this.totalDemais2;
+        },
+        
+        adicionarCor1() {
+            this.cores1.push({ posicao: '1', codigo: '', unidades: 0, demais: 0 });
+        },
+        
+        removerCor1(index) {
+            if (this.cores1.length > 1) {
+                this.cores1.splice(index, 1);
+            }
+        },
+        
+        adicionarCor2() {
+            this.cores2.push({ posicao: '1', codigo: '', unidades: 0, demais: 0 });
+        },
+        
+        removerCor2(index) {
+            if (this.cores2.length > 1) {
+                this.cores2.splice(index, 1);
+            }
+        },
+        
+        // Observa mudanças no material para detectar Dupla Densidade
+        init() {
+            const materialSelect = document.querySelector('select[name="tipo_material"]');
+            if (materialSelect) {
+                materialSelect.addEventListener('change', () => {
+                    const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+                    this.isDuplaDensidade = selectedOption.text.toLowerCase().includes('dupla densidade');
+                });
+                
+                // Verifica inicial
+                const selectedOption = materialSelect.options[materialSelect.selectedIndex];
+                if (selectedOption) {
+                    this.isDuplaDensidade = selectedOption.text.toLowerCase().includes('dupla densidade');
+                }
+            }
+            
+            // Carregar cores existentes (modo edição)
+            {% if cores1_json %}
+            try {
+                const coresExistentes1 = {{ cores1_json|safe }};
+                if (coresExistentes1 && coresExistentes1.length > 0) {
+                    this.cores1 = coresExistentes1;
+                }
+            } catch(e) {
+                console.error('Erro ao carregar cores 1:', e);
+            }
+            {% endif %}
+            
+            {% if cores2_json %}
+            try {
+                const coresExistentes2 = {{ cores2_json|safe }};
+                if (coresExistentes2 && coresExistentes2.length > 0) {
+                    this.cores2 = coresExistentes2;
+                }
+            } catch(e) {
+                console.error('Erro ao carregar cores 2:', e);
+            }
+            {% endif %}
+        }
+    }
+}
+</script>
+

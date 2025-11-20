@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Orçamentos - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header com Filtros -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-3xl font-bold text-gray-800">Orçamentos</h1>
+            <a href="{% url 'orcamento:orcamento_create' %}" class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition font-semibold">
+                + Novo Orçamento
+            </a>
+        </div>
+        
+        <!-- Filtros -->
+        <form method="get" class="grid grid-cols-1 md:grid-cols-{% if is_gestor %}4{% else %}3{% endif %} gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Buscar Cliente</label>
+                <input type="text" name="cliente" value="{{ request.GET.cliente }}" placeholder="Nome do cliente..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Material</label>
+                <select name="tipo_material" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Todos</option>
+                    {% for material in tipos_material %}
+                    <option value="{{ material.id }}" {% if request.GET.tipo_material == material.id|stringformat:"s" %}selected{% endif %}>
+                        {{ material.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% if is_gestor %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Vendedor</label>
+                <select name="vendedor" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Todos</option>
+                    {% for vendedor in vendedores %}
+                    <option value="{{ vendedor.id }}" {% if request.GET.vendedor == vendedor.id|stringformat:"s" %}selected{% endif %}>
+                        {{ vendedor.nome_completo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
+                    🔍 Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela de Orçamentos -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                        {% if is_gestor %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
+                        {% endif %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensões</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for orcamento in orcamentos %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ orcamento.numero_pedido|default:"—" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="font-medium">{{ orcamento.cliente }}</div>
+                            <div class="text-xs text-gray-500">{{ orcamento.get_tipo_cliente_display }}</div>
+                        </td>
+                        {% if is_gestor %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {% if orcamento.vendedor %}
+                                <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                                    {{ orcamento.vendedor.nome_completo }}
+                                </span>
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                {{ orcamento.tipo_material.nome }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ orcamento.largura_mm }}×{{ orcamento.comprimento_mm }}mm
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ orcamento.quantidade_metros }}m / {{ orcamento.quantidade_unidades }} un.
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ orcamento.data_emissao|date:"d/m/Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                            R$ {{ orcamento.valor_total|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <a href="{% url 'orcamento:orcamento_detail' orcamento.pk %}" 
+                               class="text-blue-600 hover:text-blue-800 mr-3 font-medium">
+                                Ver
+                            </a>
+                            <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" 
+                               class="text-green-600 hover:text-green-800 font-medium">
+                                Editar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <p class="mt-4 text-lg font-medium">Nenhum orçamento encontrado</p>
+                            <p class="mt-2 text-sm">Crie seu primeiro orçamento clicando no botão "+ Novo Orçamento"</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginação -->
+        {% if is_paginated %}
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-700">
+                    Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ paginator.count }} resultados
+                </div>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                        Anterior
+                    </a>
+                    {% endif %}
+                    
+                    <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                        {{ page_obj.number }}
+                    </span>
+                    
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                        Próxima
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

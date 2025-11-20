@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div x-data="orcamentoForm()" x-init="init()" class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ title }}</h1>
+        <p class="text-gray-600">Preencha os dados abaixo para criar ou editar um orçamento</p>
+    </div>
+
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- Dados do Cliente -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Dados do Cliente</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cliente *</label>
+                    {{ form.cliente }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Cliente *</label>
+                    {{ form.tipo_cliente }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Endereço</label>
+                    {{ form.endereco }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cidade</label>
+                    {{ form.cidade }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">UF</label>
+                    {{ form.uf }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CEP</label>
+                    {{ form.cep }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                    {{ form.telefone }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                    {{ form.email }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Número do Pedido</label>
+                    {{ form.numero_pedido }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Previsão de Entrega</label>
+                    {{ form.data_previsao_entrega }}
+                </div>
+                {% if user.vendedor %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Vendedor</label>
+                    <div class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                        <span class="flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                            <strong>{{ user.vendedor.nome_completo }}</strong>
+                            {% if user.vendedor.is_gestor %}
+                                <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Gestor</span>
+                            {% else %}
+                                <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Vendedor</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        ✓ Orçamento será vinculado automaticamente a você
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Especificações do Produto -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Especificações do Produto</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Material *</label>
+                    {{ form.tipo_material }}
+                </div>
+                
+                <!-- Batidas (selecionável - baseado no material) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Batidas *
+                        <span class="text-xs text-gray-500 font-normal">(selecione opção)</span>
+                    </label>
+                    {{ form.batida }}
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Largura (mm) *</label>
+                    {{ form.largura_mm }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Comprimento (mm) *</label>
+                    {{ form.comprimento_mm }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Corte *</label>
+                    {{ form.tipo_corte }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cor do Urdume</label>
+                    {{ form.cor_urdume }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Marca</label>
+                    {{ form.marca }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quantidades -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Quantidades</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Quantidade de Metros *
+                        <span class="text-xs text-gray-500 font-normal">(Digite o valor)</span>
+                    </label>
+                    {{ form.quantidade_metros }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Selecionar Tabela (opcional)
+                        <span class="text-xs text-gray-500 font-normal">(Planilha T11 - força a faixa de metragem)</span>
+                    </label>
+                    {{ form.tabela_manual_metragem }}
+                    <p class="text-xs text-gray-500 mt-1">
+                        Se vazio, usamos automaticamente a metragem digitada (VLOOKUP padrão).
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Campos Calculados (apenas exibição) -->
+            <div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm font-semibold text-blue-800 mb-3">
+                    📊 Valores Calculados Automaticamente:
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white p-3 rounded-lg">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Unidades (calculado)</label>
+                        <p class="text-lg font-bold text-blue-700" id="unidades-calculadas">—</p>
+                        <p class="text-xs text-gray-500 mt-1">Metros ÷ Comprimento da etiqueta</p>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Milheiros (calculado)</label>
+                        <p class="text-lg font-bold text-purple-700" id="milheiros-calculados">—</p>
+                        <p class="text-xs text-gray-500 mt-1">Unidades ÷ 1000 (arredondado para baixo)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opções Adicionais -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Opções Adicionais</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        {{ form.tem_goma }}
+                        <label for="{{ form.tem_goma.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
+                            Possui Goma
+                        </label>
+                    </div>
+                    <div x-show="orcamento.tem_goma" x-cloak>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Goma</label>
+                        {{ form.tipo_goma }}
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        {{ form.tem_ultrassonico }}
+                        <label for="{{ form.tem_ultrassonico.id_for_label }}" class="ml-2 text-sm font-medium text-gray-700">
+                            Corte Ultrassônico
+                        </label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Valor do Frete</label>
+                        {{ form.valor_frete }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Observações -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Observações</h2>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Observações Adicionais</label>
+                {{ form.observacoes }}
+            </div>
+        </div>
+
+        <!-- Valores Calculados -->
+        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg shadow-md p-6 border-2 border-green-200">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Valores Calculados</h2>
+            
+            <div id="valores-container" 
+                 hx-post="{% url 'orcamento:calcular_ajax' %}" 
+                 hx-trigger="input delay:500ms from:find input, change from:find select"
+                 hx-target="#valores-resultado"
+                 hx-swap="innerHTML"
+                 hx-indicator="#loading-indicator">
+                
+                <!-- Loading Indicator -->
+                <div id="loading-indicator" class="htmx-indicator text-center py-4">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p class="mt-2 text-sm text-gray-600">Calculando valores...</p>
+                </div>
+                
+                <!-- Resultado -->
+                <div id="valores-resultado">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-lg p-4 shadow">
+                            <p class="text-sm text-gray-600 mb-1">Valor por Metro</p>
+                            <p class="text-2xl font-bold text-blue-600" x-text="formatarMoeda(valores.valor_metro)">R$ 0,00</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow">
+                            <p class="text-sm text-gray-600 mb-1">Valor do Milheiro</p>
+                            <p class="text-2xl font-bold text-purple-600" x-text="formatarMoeda(valores.valor_milheiro)">R$ 0,00</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow">
+                            <p class="text-sm text-gray-600 mb-1">Valor por Unidade</p>
+                            <p class="text-2xl font-bold text-orange-600" x-text="formatarMoeda(valores.valor_unidade)">R$ 0,00</p>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow border-2 border-green-400">
+                            <p class="text-sm text-gray-600 mb-1">Valor Total</p>
+                            <p class="text-2xl font-bold text-green-600" x-text="formatarMoeda(valores.valor_total)">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cores/Variantes -->
+        {% include 'orcamento/partials/cores_form.html' %}
+        
+        <!-- Botões de Ação -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-end gap-4">
+                <a href="{% url 'orcamento:orcamento_list' %}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                    💾 Salvar Orçamento
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+function orcamentoForm() {
+    return {
+        orcamento: {
+            cliente: '',
+            tipo_cliente: 'comercio_novo',
+            tipo_material: '',
+            largura_mm: 0,
+            comprimento_mm: 0,
+            quantidade_metros: 0,
+            quantidade_unidades: 0,
+            tipo_corte: '',
+            tem_goma: false,
+            tipo_goma: '',
+            tem_ultrassonico: false,
+        },
+        valores: {
+            valor_metro: 0,
+            valor_milheiro: 0,
+            valor_unidade: 0,
+            valor_total: 0,
+        },
+        
+        init() {
+            console.log('Formulário inicializado');
+            
+            // Carregar batidas ao inicializar se já tem material selecionado
+            const materialSelect = document.getElementById('id_tipo_material');
+            if (materialSelect && materialSelect.value) {
+                carregarBatidasMaterial(materialSelect.value);
+            }
+        },
+        
+        formatarMoeda(valor) {
+            if (!valor) return 'R$ 0,00';
+            const numero = parseFloat(valor);
+            return numero.toLocaleString('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            });
+        },
+        
+        calcularValores() {
+            // O HTMX vai lidar com isso automaticamente
+            console.log('Valores serão recalculados via HTMX');
+        }
+    }
+}
+
+// Função global para carregar batidas do material selecionado
+function carregarBatidasMaterial(materialId) {
+    const batidaSelect = document.getElementById('id_batida');
+    
+    if (!materialId) {
+        batidaSelect.innerHTML = '<option value="">---------</option>';
+        batidaSelect.disabled = true;
+        return;
+    }
+    
+    // Carregar opções de batidas via AJAX
+    fetch(`/api/material/${materialId}/opcoes-batidas/`)
+        .then(response => response.json())
+        .then(batidas => {
+            batidaSelect.innerHTML = '<option value="">Selecione as batidas</option>';
+            
+            batidas.forEach(batida => {
+                const option = document.createElement('option');
+                option.value = batida.id;
+                option.textContent = batida.descricao;
+                batidaSelect.appendChild(option);
+            });
+            
+            batidaSelect.disabled = false;
+            
+            // Se só tem uma opção, selecionar automaticamente
+            if (batidas.length === 1) {
+                batidaSelect.value = batidas[0].id;
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao carregar batidas:', error);
+            batidaSelect.innerHTML = '<option value="">Erro ao carregar</option>';
+            batidaSelect.disabled = true;
+        });
+}
+</script>
+{% endblock %}
+
