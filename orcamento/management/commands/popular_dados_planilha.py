@@ -1,5 +1,8 @@
 from django.core.management.base import BaseCommand
+from django.conf import settings
 from decimal import Decimal
+from pathlib import Path
+from openpyxl import load_workbook
 from orcamento.models import (
     TipoMaterial, TipoCorte, TabelaPreco, CoeficienteFator,
     ValorGoma, ValorCorte, Configuracao, Textura
@@ -11,6 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.SUCCESS('Iniciando população do banco de dados...'))
+        base_dir = Path(settings.BASE_DIR)
         
         # 1. Criar Tipos de Material
         self.stdout.write('Criando tipos de material...')
@@ -43,15 +47,19 @@ class Command(BaseCommand):
         # 2. Criar Tipos de Corte
         self.stdout.write('Criando tipos de corte...')
         cortes = [
-            ('CORTE', 'CORTE', 5),
-            ('DOBRA MEIO', 'DOBRA_MEIO', 10),
-            ('DOBRA CANTOS', 'DOBRA_CANTOS', 13),
-            ('CORTE NORMAL', 'CORTE_NORMAL', 12),
-            ('ENVELOPE', 'ENVELOPE', 8),
-            ('DOBRA DESCENTRALIZADA', 'DOBRA_DESC', 22),
-            ('MEIO CORTE', 'MEIO_CORTE', 11),
-            ('SAQUINHO', 'SAQUINHO', 9),
-            ('CORTE ESPECIAL', 'CORTE_ESP', 15),
+            ('ETQ SCORTE', 'ETQ_SCORTE', 5),
+            ('CORTE NORMAL', 'CORTE_NORMAL', 6),
+            ('DOBRA MEIO', 'DOBRA_MEIO', 7),
+            ('DOBRA CANTOS', 'DOBRA_CANTOS', 8),
+            ('CANTOSDIAGONAL', 'CANTOS_DIAGONAL', 9),
+            ('DOBRA DESCENTRALIZADA', 'DOBRA_DESC', 10),
+            ('ENVELOPE', 'ENVELOPE', 11),
+            ('MITRA', 'MITRA', 12),
+            ('2 DOBRAS', 'DOIS_DOBRAS', 13),
+            # cortes auxiliares já existentes para compatibilidade
+            ('MEIO CORTE', 'MEIO_CORTE', 14),
+            ('SAQUINHO', 'SAQUINHO', 15),
+            ('CORTE ESPECIAL', 'CORTE_ESP', 16),
         ]
         
         for nome, codigo, codigo_calc in cortes:
@@ -94,20 +102,30 @@ class Command(BaseCommand):
                 defaults={'preco_metro': Decimal(str(preco))}
             )
         
-        # 4. Criar Coeficientes Fator (exemplos baseados na planilha)
+        # 4. Criar Coeficientes Fator (baseados na planilha)
         self.stdout.write('Criando coeficientes fator...')
-        larguras = [10, 12, 15, 18, 20, 21, 24, 28, 30, 33, 40, 50, 67, 100]
-        
-        # Coeficientes para Tafetá
-        coefs_tafeta = [0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97, 0.97]
-        corte = TipoCorte.objects.get(codigo='CORTE')
-        for largura, coef in zip(larguras, coefs_tafeta):
-            CoeficienteFator.objects.get_or_create(
-                largura=largura,
-                tipo_material=tafeta,
-                codigo_corte=corte,
-                defaults={'coeficiente': Decimal(str(coef))}
-            )
+        coef_planilha = self._carregar_coeficientes_planilha(base_dir)
+        larguras_disponiveis = sorted(coef_planilha.pop('_larguras', set()))
+        if not larguras_disponiveis:
+            larguras_disponiveis = [10, 12, 15, 18, 20, 21, 24, 28, 30, 33, 40, 50, 67, 100]
+
+        materiais_qs = TipoMaterial.objects.all()
+        cortes_qs = TipoCorte.objects.all()
+
+        for largura in larguras_disponiveis:
+            for corte in cortes_qs:
+                for material in materiais_qs:
+                    valor = coef_planilha.get(
+                        (corte.nome.upper(), material.codigo.upper()),
+                        {}
+                    ).get(largura, Decimal('1.0'))
+
+                    CoeficienteFator.objects.update_or_create(
+                        largura=largura,
+                        tipo_material=material,
+                        codigo_corte=corte,
+                        defaults={'coeficiente': Decimal(str(valor))}
+                    )
         
         # 5. Criar Valores de Goma (baseado na planilha)
         self.stdout.write('Criando valores de goma...')
@@ -204,4 +222,60 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'  - {ValorCorte.objects.count()} valores de corte'))
         self.stdout.write(self.style.SUCCESS(f'  - {Configuracao.objects.count()} configuracoes'))
         self.stdout.write(self.style.SUCCESS(f'  - {Textura.objects.count()} texturas'))
+
+    def _carregar_coeficientes_planilha(self, base_dir: Path):
+        """Extrai o mapa de coeficientes diretamente da aba Plan2 da planilha."""
+        caminho = base_dir / 'futuraDesprotegidaModelo1.xlsx'
+        dados = {}
+        larguras = set()
+
+        if not caminho.exists():
+            self.stdout.write(self.style.WARNING('Planilha "futuraDesprotegidaModelo1.xlsx" não encontrada. Coeficientes padrão (1.0) serão usados.'))
+            dados['_larguras'] = larguras
+            return dados
+
+        wb = load_workbook(caminho, data_only=True)
+        if 'Plan2' not in wb.sheetnames:
+            self.stdout.write(self.style.WARNING('A planilha não possui aba "Plan2".'))
+            dados['_larguras'] = larguras
+            return dados
+
+        ws = wb['Plan2']
+
+        grupos = {}
+        header_row = 3
+        for col in range(9, 40, 3):
+            nome = ws.cell(row=header_row, column=col).value
+            if nome:
+                grupos[col] = str(nome).strip().upper()
+
+        material_codes = ['TAFETA', 'SARJA', 'ALTA_DEF']
+
+        for row in range(5, 40):
+            largura = ws.cell(row=row, column=8).value
+            if not largura:
+                continue
+
+            try:
+                largura = int(largura)
+            except (TypeError, ValueError):
+                continue
+
+            larguras.add(largura)
+
+            for col_base, corte_nome in grupos.items():
+                for offset, material_code in enumerate(material_codes):
+                    valor = ws.cell(row=row, column=col_base + offset).value
+                    if valor is None:
+                        continue
+
+                    try:
+                        decimal_value = Decimal(str(valor))
+                    except Exception:
+                        continue
+
+                    dados.setdefault((corte_nome, material_code), {})[largura] = decimal_value
+
+        dados['_larguras'] = larguras
+        return dados
 

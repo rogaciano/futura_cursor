@@ -10,7 +10,7 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.db.models import Count, Q
 from .models import TipoMaterial, Batida, TabelaPreco, CoeficienteFator, ValorGoma, ValorCorte, Configuracao, Textura, TipoCorte
-from .forms import TipoMaterialForm, BatidaForm
+from .forms import TipoMaterialForm, BatidaForm, CoeficienteFatorForm
 
 
 def is_gestor_or_superuser(user):
@@ -257,3 +257,94 @@ def batida_quick_add(request, material_id):
     
     return redirect('orcamento:tipomaterial_update', pk=material_id)
 
+
+# ================== COEFICIENTE FATOR ==================
+
+
+class CoeficienteFatorListView(LoginRequiredMixin, GestorRequiredMixin, ListView):
+    """Lista de coeficientes fator"""
+    model = CoeficienteFator
+    template_name = 'orcamento/tabelas/coeficientefator_list.html'
+    context_object_name = 'coeficientes'
+    paginate_by = 30
+
+    def get_queryset(self):
+        queryset = CoeficienteFator.objects.select_related('tipo_material', 'codigo_corte').order_by(
+            'largura', 'tipo_material__nome', 'codigo_corte__nome'
+        )
+
+        material_id = self.request.GET.get('material')
+        if material_id:
+            queryset = queryset.filter(tipo_material_id=material_id)
+
+        corte_id = self.request.GET.get('corte')
+        if corte_id:
+            queryset = queryset.filter(codigo_corte_id=corte_id)
+
+        largura = self.request.GET.get('largura')
+        if largura:
+            queryset = queryset.filter(largura=largura)
+
+        busca = self.request.GET.get('busca')
+        if busca:
+            queryset = queryset.filter(
+                Q(tipo_material__nome__icontains=busca) |
+                Q(codigo_corte__nome__icontains=busca)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materiais'] = TipoMaterial.objects.order_by('nome')
+        context['cortes'] = TipoCorte.objects.order_by('nome')
+        context['material_id'] = self.request.GET.get('material', '')
+        context['corte_id'] = self.request.GET.get('corte', '')
+        context['largura'] = self.request.GET.get('largura', '')
+        context['busca'] = self.request.GET.get('busca', '')
+        return context
+
+
+class CoeficienteFatorCreateView(LoginRequiredMixin, GestorRequiredMixin, CreateView):
+    """Cria novo coeficiente"""
+    model = CoeficienteFator
+    form_class = CoeficienteFatorForm
+    template_name = 'orcamento/tabelas/coeficientefator_form.html'
+    success_url = reverse_lazy('orcamento:coeficientefator_list')
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            'Coeficiente criado com sucesso!'
+        )
+        return super().form_valid(form)
+
+
+class CoeficienteFatorUpdateView(LoginRequiredMixin, GestorRequiredMixin, UpdateView):
+    """Edita coeficiente"""
+    model = CoeficienteFator
+    form_class = CoeficienteFatorForm
+    template_name = 'orcamento/tabelas/coeficientefator_form.html'
+    success_url = reverse_lazy('orcamento:coeficientefator_list')
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            'Coeficiente atualizado com sucesso!'
+        )
+        return super().form_valid(form)
+
+
+class CoeficienteFatorDeleteView(LoginRequiredMixin, GestorRequiredMixin, DeleteView):
+    """Remove coeficiente"""
+    model = CoeficienteFator
+    template_name = 'orcamento/tabelas/coeficientefator_confirm_delete.html'
+    success_url = reverse_lazy('orcamento:coeficientefator_list')
+
+    def delete(self, request, *args, **kwargs):
+        coef = self.get_object()
+        messages.success(request, f'Coeficiente {coef} removido com sucesso!')
+        return super().delete(request, *args, **kwargs)
+
+
+# ================== QUICK ADD ==================

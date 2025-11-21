@@ -98,9 +98,10 @@ Acesse http://127.0.0.1:8000/dashboard/ para ver:
 
 ### Modificar Coeficientes
 
-1. Acesse: http://127.0.0.1:8000/admin/orcamento/coeficientefator/
-2. Ajuste os coeficientes conforme necessário
-3. Isso afetará diretamente os cálculos dos orçamentos
+1. Acesse: http://127.0.0.1:8000/tabelas/coeficientes/
+2. Use filtros por material, corte e largura
+3. Clique em “Novo Coeficiente” para adicionar ou edite/exclua existentes
+4. (Opcional) via admin: http://127.0.0.1:8000/admin/orcamento/coeficientefator/
 
 ## 📱 Recursos Especiais
 

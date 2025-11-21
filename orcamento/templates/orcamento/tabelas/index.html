@@ -118,6 +118,24 @@
             </div>
         </a>
 
+        <!-- Coeficientes Fator -->
+        <a href="{% url 'orcamento:coeficientefator_list' %}" class="block group">
+            <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-indigo-500">
+                <div class="flex items-center mb-4">
+                    <div class="flex-shrink-0 bg-indigo-100 rounded-lg p-3">
+                        <svg class="h-8 w-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-2m3 2v-2M6 7h.01M6 11h.01M6 15h.01M21 11h-6m0 0a3 3 0 00-6 0m6 0a3 3 0 01-6 0m0 0H3" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600">Coeficientes Fator</h3>
+                        <p class="text-sm text-gray-500">{{ stats.coeficientes }} registros</p>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600">Gerencie os coeficientes aplicados no cálculo por largura, corte e material.</p>
+            </div>
+        </a>
+
         <!-- Tabelas de Preço -->
         <a href="/admin/orcamento/tabelapreco/" class="block group">
             <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-green-500">

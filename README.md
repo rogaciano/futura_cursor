@@ -31,6 +31,7 @@ Sistema inteligente para cálculo de orçamentos de etiquetas personalizadas des
 - **Gestão de Clientes**: Cadastro completo com tipos de cliente e histórico
 - **Opções Avançadas**: Gomas (fino, grosso, termocolante), corte ultrassônico
 - **Texturas Personalizadas**: Mais de 30 texturas disponíveis
+- **Menu Tabelas**: CRUD amigável para materiais, batidas, coeficientes fator, tabelas de preço e demais parâmetros
 
 ### 🎯 Sistema de Cálculo
 
@@ -91,6 +92,8 @@ python manage.py migrate
 
 ```bash
 python manage.py popular_dados_planilha
+python manage.py popular_batidas
+python manage.py popular_fitas
 ```
 
 7. **Crie grupos e usuários de teste**

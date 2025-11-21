@@ -38,6 +38,12 @@ urlpatterns = [
     path('tabelas/batidas/<int:pk>/editar/', views_tabelas.BatidaUpdateView.as_view(), name='batida_update'),
     path('tabelas/batidas/<int:pk>/deletar/', views_tabelas.BatidaDeleteView.as_view(), name='batida_delete'),
     path('tabelas/batidas/add/<int:material_id>/', views_tabelas.batida_quick_add, name='batida_quick_add'),
+
+    # Coeficientes Fator (CRUD)
+    path('tabelas/coeficientes/', views_tabelas.CoeficienteFatorListView.as_view(), name='coeficientefator_list'),
+    path('tabelas/coeficientes/novo/', views_tabelas.CoeficienteFatorCreateView.as_view(), name='coeficientefator_create'),
+    path('tabelas/coeficientes/<int:pk>/editar/', views_tabelas.CoeficienteFatorUpdateView.as_view(), name='coeficientefator_update'),
+    path('tabelas/coeficientes/<int:pk>/deletar/', views_tabelas.CoeficienteFatorDeleteView.as_view(), name='coeficientefator_delete'),
     
     # AJAX/HTMX endpoints
     path('api/calcular/', views.calcular_orcamento_ajax, name='calcular_ajax'),
