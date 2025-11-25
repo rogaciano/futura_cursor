@@ -8,7 +8,7 @@
      8|    Retorna informações gerais do sistema disponíveis em todos os templates
      9|    """
     10|    return {
-    11|        'SYSTEM_NAME': getattr(settings, 'SYSTEM_NAME', 'Sistema de Orçamentos'),
+    11|        'SYSTEM_NAME': getattr(settings, 'SYSTEM_NAME', 'Pedidos Futura Etiquetas'),
     12|        'SYSTEM_VERSION': getattr(settings, 'SYSTEM_VERSION', '1.0.0'),
     13|    }
     14|
