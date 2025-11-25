@@ -38,7 +38,7 @@
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
                         <a href="{% url 'orcamento:index' %}" class="text-white text-xl font-bold">
-                            📋 Sistema de Orçamentos
+                            📋 {{ SYSTEM_NAME }}
                         </a>
                     </div>
                     {% if user.is_authenticated %}
