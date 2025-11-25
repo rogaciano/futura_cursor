@@ -57,31 +57,31 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Pedido</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                         {% if is_gestor %}
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendedor</th>
                         {% endif %}
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensões</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dimensões</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qtd.</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 shadow-sm">Ações</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for orcamento in orcamentos %}
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ orcamento.numero_pedido|default:"—" }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div class="font-medium">{{ orcamento.cliente }}</div>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <div class="font-medium truncate max-w-[150px]" title="{{ orcamento.cliente }}">{{ orcamento.cliente }}</div>
                             <div class="text-xs text-gray-500">{{ orcamento.get_tipo_cliente_display }}</div>
                         </td>
                         {% if is_gestor %}
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                             {% if orcamento.vendedor %}
                                 <span class="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
                                     {{ orcamento.vendedor.nome_completo }}
@@ -91,49 +91,42 @@
                             {% endif %}
                         </td>
                         {% endif %}
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                             <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
                                 {{ orcamento.tipo_material.nome }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ orcamento.largura_mm }}×{{ orcamento.comprimento_mm }}mm
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ orcamento.quantidade_metros }}m / {{ orcamento.quantidade_unidades }} un.
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div class="flex flex-col">
+                                <span>{{ orcamento.quantidade_metros }}m</span>
+                                <span class="text-xs text-gray-400">{{ orcamento.quantidade_unidades }} un.</span>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ orcamento.data_emissao|date:"d/m/Y" }}
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ orcamento.data_emissao|date:"d/m/y" }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                             R$ {{ orcamento.valor_total|floatformat:2 }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500 sticky right-0 bg-white shadow-sm border-l border-gray-100">
                             <div class="flex justify-end space-x-2">
                                 <a href="{% url 'orcamento:orcamento_detail' orcamento.pk %}" 
-                                   class="text-blue-600 hover:text-blue-800 p-1 rounded-full hover:bg-blue-50 transition" title="Ver detalhes">
+                                   class="text-blue-600 hover:text-blue-800 p-1.5 rounded-full hover:bg-blue-50 transition" title="Ver detalhes">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
                                 </a>
                                 <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" 
-                                   class="text-green-600 hover:text-green-800 p-1 rounded-full hover:bg-green-50 transition" title="Editar orçamento">
+                                   class="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50 transition" title="Editar orçamento">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </a>
                             </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <p class="mt-4 text-lg font-medium">Nenhum orçamento encontrado</p>
-                            <p class="mt-2 text-sm">Crie seu primeiro orçamento clicando no botão "+ Novo Orçamento"</p>
                         </td>
                     </tr>
                     {% endfor %}
@@ -171,4 +164,3 @@
     </div>
 </div>
 {% endblock %}
-
