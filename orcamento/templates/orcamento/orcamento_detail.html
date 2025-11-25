@@ -84,6 +84,16 @@
                 <p class="text-gray-900 font-medium">{{ orcamento.largura_mm }} × {{ orcamento.comprimento_mm }} mm</p>
             </div>
             <div>
+                <label class="text-sm font-medium text-gray-500">Textura</label>
+                <p class="text-gray-900">
+                    {% if orcamento.textura %}
+                        {{ orcamento.textura.nome }}
+                    {% else %}
+                        <span class="text-gray-400">-</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
                 <label class="text-sm font-medium text-gray-500">Tipo de Corte</label>
                 <p class="text-gray-900">{{ orcamento.tipo_corte.nome }}</p>
             </div>
@@ -130,12 +140,12 @@
             <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Opções</h2>
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Goma</span>
-                    <span class="{% if orcamento.tem_goma %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
-                        {% if orcamento.tem_goma %}
-                            ✓ {{ orcamento.get_tipo_goma_display }}
+                    <span class="text-gray-600">Material / Acabamento</span>
+                    <span class="{% if orcamento.acabamento %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
+                        {% if orcamento.acabamento %}
+                            ✓ {{ orcamento.acabamento.nome }}
                         {% else %}
-                            ✗ Não possui
+                            ✗ Nenhum
                         {% endif %}
                     </span>
                 </div>
@@ -180,6 +190,29 @@
             <div class="flex justify-between items-center mt-2 pt-2 border-t">
                 <span class="text-gray-800 font-semibold">Total com Frete</span>
                 <span class="text-2xl font-bold text-green-600">R$ {{ orcamento.valor_total|add:orcamento.valor_frete|floatformat:2 }}</span>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- DETALHAMENTO DE CÁLCULO (DEBUG) -->
+        {% if debug_calculos and debug_info %}
+        <div class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 font-mono text-xs shadow-lg border border-gray-600">
+            <h4 class="text-sm font-bold text-yellow-400 mb-3 border-b border-gray-600 pb-2 flex justify-between items-center">
+                <span>🛠️ DEBUG DE CÁLCULOS</span>
+                <span class="text-[10px] text-gray-400 font-normal">DEBUG_CALCULOS=True</span>
+            </h4>
+            
+            <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+                {% for passo in debug_info.passos %}
+                <div class="flex justify-between hover:bg-gray-700 p-1 rounded border-b border-gray-700 border-dashed">
+                    <span class="text-gray-400">{{ passo.label }}:</span>
+                    <span class="font-bold text-green-400">{{ passo.valor }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="mt-4 pt-2 border-t border-gray-600 text-gray-400 italic text-center">
+                Valores calculados passo a passo conforme planilha
             </div>
         </div>
         {% endif %}

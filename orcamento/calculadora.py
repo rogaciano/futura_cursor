@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Dict
-from .models import TabelaPreco, CoeficienteFator, ValorGoma, ValorCorte, Configuracao
+from .models import TabelaPreco, CoeficienteFator, PrecoAcabamento, Configuracao, ValorCorte, Fita
 
 
 class CalculadoraOrcamento:
@@ -67,26 +67,20 @@ class CalculadoraOrcamento:
     
     def _obter_valor_goma(self) -> Decimal:
         """
-        Obtém o valor da goma baseado na largura e tipo
+        Obtém o valor do acabamento (antiga goma) baseado na largura e acabamento
         """
-        if not self.orcamento.tem_goma or not self.orcamento.tipo_goma:
+        if not self.orcamento.acabamento:
             return Decimal('0.0')
         
-        valor_goma = ValorGoma.objects.filter(
-            largura__lte=self.orcamento.largura_mm
-        ).order_by('-largura').first()
+        preco_obj = PrecoAcabamento.objects.filter(
+            largura_mm__lte=self.orcamento.largura_mm,
+            acabamento=self.orcamento.acabamento
+        ).order_by('-largura_mm').first()
         
-        if not valor_goma:
+        if not preco_obj:
             return Decimal('0.0')
-        
-        if self.orcamento.tipo_goma == 'fino':
-            return valor_goma.goma_fino
-        elif self.orcamento.tipo_goma == 'grosso':
-            return valor_goma.goma_grosso
-        elif self.orcamento.tipo_goma == 'termo':
-            return valor_goma.termocolante
-        
-        return Decimal('0.0')
+            
+        return preco_obj.preco
     
     def _obter_valor_corte_especial(self) -> Decimal:
         """
@@ -164,6 +158,26 @@ class CalculadoraOrcamento:
         
         return Decimal('1.0')
     
+    def _obter_fator_fita(self) -> Decimal:
+        """
+        Obtém o fator de conversão da fita baseado na largura real
+        """
+        largura_real = self._calcular_largura_real()
+        
+        fita = Fita.objects.filter(largura_mm=largura_real).first()
+        if not fita:
+            # Tenta encontrar o próximo menor
+            fita = Fita.objects.filter(largura_mm__lte=largura_real).order_by('-largura_mm').first()
+            
+        return fita.fator if fita else Decimal('0.0')
+
+    def _obter_coeficiente_metragem_cm(self) -> Decimal:
+        """
+        Obtém o coeficiente de metragem CM (Configuração)
+        Padrão: 0.330 se não configurado
+        """
+        return self.configs.get('coeficiente_metragem_cm', Decimal('0.330'))
+
     def calcular(self) -> Dict[str, Decimal]:
         """
         Realiza todos os cálculos EXATAMENTE como na planilha
@@ -216,6 +230,21 @@ class CalculadoraOrcamento:
         # Coeficiente fator
         coef_fator = self._obter_coeficiente_fator()
         
+        # Fator Fita (para debug)
+        fator_fita = self._obter_fator_fita()
+        
+        # Calcula variável densidade_cores_fita
+        # Fórmula ajustada conforme Excel: =soma_cores * preco_base / fator_fita / comprimento
+        
+        # Calcula soma de unidades das cores
+        total_unidades_cores = sum(c.quantidade_unidades + c.quantidade_demais for c in self.orcamento.cores.all())
+        
+        densidade_cores_fita = Decimal('0.0')
+        if fator_fita > 0 and comprimento_mm > 0:
+            densidade_cores_fita = (
+                Decimal(total_unidades_cores) * preco_base
+            ) / fator_fita / comprimento_mm
+
         # Valor base POR METRO
         valor_metro_base = preco_base * coef_fator
         
@@ -275,6 +304,36 @@ class CalculadoraOrcamento:
         valor_total = valor_total.quantize(Decimal('0.01'))
         unidades = unidades.quantize(Decimal('0.01'))
         
+        # Estrutura de Debug
+        
+        # Calcula soma de unidades das cores
+        total_unidades_cores = sum(c.quantidade_unidades + c.quantidade_demais for c in self.orcamento.cores.all())
+        
+        debug_info = {
+            'passos': [
+                {'label': 'Metragem', 'valor': f"{metros} m"},
+                {'label': 'Largura', 'valor': f"{largura_mm} mm"},
+                {'label': 'Largura Real', 'valor': f"{self._calcular_largura_real()} mm"},
+                {'label': 'Comprimento', 'valor': f"{comprimento_mm} mm"},
+                {'label': 'Soma Unidades (Cores)', 'valor': f"{total_unidades_cores} un"},
+                {'label': 'Unidades (Calculado)', 'valor': f"{unidades} un"},
+                {'label': 'Preço Base (Tabela)', 'valor': f"R$ {preco_base:.5f}"},
+                {'label': 'Coeficiente Fator', 'valor': f"{coef_fator:.5f}"},
+                {'label': 'Fator Fita', 'valor': f"{fator_fita}"},
+                {'label': 'Densidade Cores Fita', 'valor': f"{densidade_cores_fita:.9f}"},
+                {'label': 'Valor Base (Metro)', 'valor': f"R$ {preco_base * coef_fator:.5f}"},
+                {'label': 'Valor Acabamento', 'valor': f"R$ {valor_goma:.5f}"},
+                {'label': 'Valor Corte Especial', 'valor': f"R$ {valor_corte_especial:.5f}"},
+                {'label': 'Fator Largura 60', 'valor': f"{fator_largura_60}"},
+                {'label': 'Fator Cliente', 'valor': f"{fator_cliente}"},
+                {'label': 'Perc. Ultrassônico', 'valor': f"{perc_ultrassonico}"},
+                {'label': 'Coef. Corte (CC)', 'valor': f"{cc:.5f}"},
+                {'label': 'Perc. Aumento Geral', 'valor': f"{perc_aumento_geral}"},
+                {'label': 'Valor Metro Final (Calc)', 'valor': f"R$ {valor_metro_final:.5f}"},
+                {'label': 'Milheiros', 'valor': f"{milheiros}"},
+            ]
+        }
+
         return {
             'valor_metro': valor_metro,
             'valor_milheiro': valor_milheiro,
@@ -287,5 +346,6 @@ class CalculadoraOrcamento:
             'valor_goma': valor_goma,
             'cc': cc,
             'area_m2': area_etiqueta_m2,
+            'debug_info': debug_info,
         }
 

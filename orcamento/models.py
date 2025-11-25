@@ -142,6 +142,44 @@ class ValorCorte(models.Model):
         return f'{self.largura}mm'
 
 
+class Acabamento(models.Model):
+    """
+    Materiais de acabamento (Célula O25 da planilha)
+    Ex: Goma F, Goma G, Cola Fria, Termocolante, etc.
+    """
+    nome = models.CharField(max_length=100, unique=True)
+    codigo = models.CharField(max_length=50, unique=True)
+    ordem = models.IntegerField(default=0)
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = 'Acabamento / Material'
+        verbose_name_plural = 'Acabamentos / Materiais'
+        ordering = ['ordem', 'nome']
+
+    def __str__(self):
+        return self.nome
+
+
+class PrecoAcabamento(models.Model):
+    """
+    Preço do acabamento por largura (Plan2)
+    Substitui ValorGoma e ValorCorte antigos
+    """
+    largura_mm = models.IntegerField(validators=[MinValueValidator(1)])
+    acabamento = models.ForeignKey(Acabamento, on_delete=models.CASCADE, related_name='precos')
+    preco = models.DecimalField(max_digits=10, decimal_places=5, validators=[MinValueValidator(Decimal('0.0'))])
+
+    class Meta:
+        verbose_name = 'Preço de Acabamento'
+        verbose_name_plural = 'Preços de Acabamentos'
+        ordering = ['largura_mm', 'acabamento']
+        unique_together = ['largura_mm', 'acabamento']
+
+    def __str__(self):
+        return f'{self.largura_mm}mm - {self.acabamento.nome}: R$ {self.preco}'
+
+
 class Vendedor(models.Model):
     """Vendedor do sistema - vinculado ao User do Django"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='vendedor')
@@ -297,6 +335,13 @@ class Orcamento(models.Model):
     largura_mm = models.IntegerField(validators=[MinValueValidator(1)], help_text="Largura em mm")
     comprimento_mm = models.IntegerField(validators=[MinValueValidator(1)], help_text="Comprimento em mm")
     tipo_corte = models.ForeignKey(TipoCorte, on_delete=models.PROTECT)
+    textura = models.ForeignKey(
+        'Textura',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        help_text="Textura selecionada para a etiqueta"
+    )
     cor_urdume = models.CharField(max_length=20, choices=COR_URDUME_CHOICES, default='nenhum')
     
     # Quantidades
@@ -312,11 +357,12 @@ class Orcamento(models.Model):
     )
     
     # Opções
-    tem_goma = models.BooleanField(default=False)
-    tipo_goma = models.CharField(
-        max_length=20,
-        choices=[('fino', 'Fino'), ('grosso', 'Grosso'), ('termo', 'Termocolante')],
-        blank=True
+    acabamento = models.ForeignKey(
+        'Acabamento',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Material / Acabamento selecionado (ex: Goma, Termocolante)"
     )
     tem_ultrassonico = models.BooleanField(default=False)
     

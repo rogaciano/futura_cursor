@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Nova{% endif %} Tabela de Preço - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            {% if form.instance.pk %}Editar{% else %}Nova{% endif %} Tabela de Preço
+        </h1>
+        <p class="mt-2 text-gray-600">Preencha os dados abaixo para {% if form.instance.pk %}editar o{% else %}criar um novo{% endif %} preço.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ form.non_field_errors }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 gap-6">
+                <div>
+                    <label for="{{ form.tipo_material.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tipo de Material
+                    </label>
+                    {{ form.tipo_material }}
+                    {% if form.tipo_material.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.tipo_material.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.metragem.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Metragem (metros)
+                    </label>
+                    {{ form.metragem }}
+                    {% if form.metragem.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.metragem.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.preco_metro.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Preço por Metro (R$)
+                    </label>
+                    {{ form.preco_metro }}
+                    {% if form.preco_metro.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ form.preco_metro.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-4 pt-4 border-t border-gray-200">
+                <a href="{% url 'orcamento:tabelapreco_list' %}" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    {% if form.instance.pk %}Salvar Alterações{% else %}Criar Preço{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

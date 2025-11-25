@@ -157,7 +157,8 @@ class OrcamentoCreateView(LoginRequiredMixin, CreateView):
         form.instance.save()
         
         messages.success(self.request, 'Orçamento criado com sucesso!')
-        return response
+        # Redireciona para a visualização do orçamento
+        return redirect('orcamento:orcamento_detail', pk=form.instance.pk)
     
     def _processar_cores(self, orcamento):
         """Processa e salva as cores do orçamento"""
@@ -253,6 +254,15 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
             'demais': c['quantidade_demais']
         } for c in cores2]) if cores2 else '[]'
         
+        # Adicionar dados de debug ao contexto
+        from django.conf import settings
+        if getattr(settings, 'DEBUG_CALCULOS', False):
+            from .calculadora import CalculadoraOrcamento
+            calculadora = CalculadoraOrcamento(orcamento)
+            valores = calculadora.calcular()
+            context['valores'] = valores  # Passa valores para preencher campos iniciais
+            context['debug_calculos'] = True
+        
         return context
     
     def form_valid(self, form):
@@ -267,7 +277,8 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
         form.instance.save()
         
         messages.success(self.request, 'Orçamento atualizado com sucesso!')
-        return response
+        # Redireciona para a visualização do orçamento
+        return redirect('orcamento:orcamento_detail', pk=form.instance.pk)
     
     def _processar_cores(self, orcamento):
         """Processa e salva as cores do orçamento"""
@@ -331,6 +342,20 @@ class OrcamentoDetailView(LoginRequiredMixin, DetailView):
         
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Adicionar dados de debug se flag estiver ativa
+        from django.conf import settings
+        if getattr(settings, 'DEBUG_CALCULOS', False):
+            from .calculadora import CalculadoraOrcamento
+            calculadora = CalculadoraOrcamento(self.object)
+            valores = calculadora.calcular()
+            context['debug_info'] = valores.get('debug_info', {})
+            context['debug_calculos'] = True
+            
+        return context
+
 
 @login_required
 def calcular_orcamento_ajax(request):
@@ -380,12 +405,15 @@ def calcular_orcamento_ajax(request):
                 'preco_base': str(valores['preco_base']),
                 'coef_fator': str(valores['coef_fator']),
                 'area_m2': str(valores['area_m2']),
+                'debug_info': valores.get('debug_info', {}),
             }
             
             # Se for requisição HTMX, retornar HTML partial
             if request.htmx:
+                from django.conf import settings
                 return render(request, 'orcamento/partials/valores_calculados.html', {
                     'valores': valores,
+                    'debug_calculos': getattr(settings, 'DEBUG_CALCULOS', False),
                 })
             
             return JsonResponse(response_data)

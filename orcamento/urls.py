@@ -45,6 +45,14 @@ urlpatterns = [
     path('tabelas/coeficientes/<int:pk>/editar/', views_tabelas.CoeficienteFatorUpdateView.as_view(), name='coeficientefator_update'),
     path('tabelas/coeficientes/<int:pk>/deletar/', views_tabelas.CoeficienteFatorDeleteView.as_view(), name='coeficientefator_delete'),
     
+    # Tabela de Preços (CRUD)
+    path('tabelas/precos/', views_tabelas.TabelaPrecoListView.as_view(), name='tabelapreco_list'),
+    path('tabelas/precos/novo/', views_tabelas.TabelaPrecoCreateView.as_view(), name='tabelapreco_create'),
+    path('tabelas/precos/<int:pk>/editar/', views_tabelas.TabelaPrecoUpdateView.as_view(), name='tabelapreco_update'),
+    path('tabelas/precos/<int:pk>/deletar/', views_tabelas.TabelaPrecoDeleteView.as_view(), name='tabelapreco_delete'),
+    path('tabelas/precos/copiar/', views_tabelas.TabelaPrecoCopyView.as_view(), name='tabelapreco_copy'),
+    path('tabelas/precos/pivot/', views_tabelas.TabelaPrecoPivotView.as_view(), name='tabelapreco_pivot'),
+    
     # AJAX/HTMX endpoints
     path('api/calcular/', views.calcular_orcamento_ajax, name='calcular_ajax'),
     path('api/precos-material/<int:material_id>/', views.obter_precos_material, name='precos_material'),

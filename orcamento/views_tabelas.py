@@ -7,10 +7,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, View, TemplateView
 from django.db.models import Count, Q
-from .models import TipoMaterial, Batida, TabelaPreco, CoeficienteFator, ValorGoma, ValorCorte, Configuracao, Textura, TipoCorte
-from .forms import TipoMaterialForm, BatidaForm, CoeficienteFatorForm
+from .models import TipoMaterial, Batida, TabelaPreco, CoeficienteFator, ValorGoma, ValorCorte, Configuracao, Textura, TipoCorte, Acabamento
+from .forms import TipoMaterialForm, BatidaForm, CoeficienteFatorForm, TabelaPrecoForm
 
 
 def is_gestor_or_superuser(user):
@@ -41,6 +41,7 @@ def tabelas_index(request):
         'batidas_ativas': Batida.objects.filter(ativo=True).count(),
         'tipos_corte': TipoCorte.objects.count(),
         'texturas': Textura.objects.count(),
+        'acabamentos': Acabamento.objects.count(),
         'tabelas_preco': TabelaPreco.objects.count(),
         'coeficientes': CoeficienteFator.objects.count(),
         'valores_goma': ValorGoma.objects.count(),
@@ -347,4 +348,182 @@ class CoeficienteFatorDeleteView(LoginRequiredMixin, GestorRequiredMixin, Delete
         return super().delete(request, *args, **kwargs)
 
 
-# ================== QUICK ADD ==================
+# ================== TABELA DE PREÇO ==================
+
+class TabelaPrecoListView(LoginRequiredMixin, GestorRequiredMixin, ListView):
+    """Lista de tabelas de preço"""
+    model = TabelaPreco
+    template_name = 'orcamento/tabelas/tabelapreco_list.html'
+    context_object_name = 'precos'
+    paginate_by = 30
+
+    def get_queryset(self):
+        queryset = TabelaPreco.objects.select_related('tipo_material').order_by(
+            'tipo_material__nome', 'metragem'
+        )
+
+        material_id = self.request.GET.get('material')
+        if material_id:
+            queryset = queryset.filter(tipo_material_id=material_id)
+
+        busca = self.request.GET.get('busca')
+        if busca:
+            queryset = queryset.filter(
+                Q(tipo_material__nome__icontains=busca) |
+                Q(metragem__icontains=busca)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materiais'] = TipoMaterial.objects.filter(ativo=True).order_by('nome')
+        context['material_id'] = self.request.GET.get('material', '')
+        context['busca'] = self.request.GET.get('busca', '')
+        return context
+
+
+class TabelaPrecoCreateView(LoginRequiredMixin, GestorRequiredMixin, CreateView):
+    """Cria nova tabela de preço"""
+    model = TabelaPreco
+    form_class = TabelaPrecoForm
+    template_name = 'orcamento/tabelas/tabelapreco_form.html'
+    success_url = reverse_lazy('orcamento:tabelapreco_list')
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            'Preço criado com sucesso!'
+        )
+        return super().form_valid(form)
+
+
+class TabelaPrecoUpdateView(LoginRequiredMixin, GestorRequiredMixin, UpdateView):
+    """Edita tabela de preço"""
+    model = TabelaPreco
+    form_class = TabelaPrecoForm
+    template_name = 'orcamento/tabelas/tabelapreco_form.html'
+    success_url = reverse_lazy('orcamento:tabelapreco_list')
+
+    def form_valid(self, form):
+        messages.success(
+            self.request,
+            'Preço atualizado com sucesso!'
+        )
+        return super().form_valid(form)
+
+
+class TabelaPrecoDeleteView(LoginRequiredMixin, GestorRequiredMixin, DeleteView):
+    """Remove tabela de preço"""
+    model = TabelaPreco
+    template_name = 'orcamento/tabelas/tabelapreco_confirm_delete.html'
+    success_url = reverse_lazy('orcamento:tabelapreco_list')
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        messages.success(request, f'Preço de {obj.metragem}m para {obj.tipo_material.nome} removido!')
+        return super().delete(request, *args, **kwargs)
+
+
+class TabelaPrecoCopyView(LoginRequiredMixin, GestorRequiredMixin, View):
+    """Copia preços de um material para outro"""
+    
+    def post(self, request, *args, **kwargs):
+        source_id = request.POST.get('source_material')
+        dest_id = request.POST.get('dest_material')
+        
+        if not source_id or not dest_id:
+            messages.error(request, 'Selecione os materiais de origem e destino.')
+            return redirect('orcamento:tabelapreco_list')
+        
+        if source_id == dest_id:
+            messages.error(request, 'Os materiais de origem e destino devem ser diferentes.')
+            return redirect('orcamento:tabelapreco_list')
+            
+        try:
+            source_material = TipoMaterial.objects.get(pk=source_id)
+            dest_material = TipoMaterial.objects.get(pk=dest_id)
+            
+            source_precos = TabelaPreco.objects.filter(tipo_material=source_material)
+            
+            if not source_precos.exists():
+                messages.warning(request, f'Não há preços cadastrados para {source_material.nome}.')
+                return redirect('orcamento:tabelapreco_list')
+            
+            count_created = 0
+            count_updated = 0
+            
+            for preco in source_precos:
+                obj, created = TabelaPreco.objects.update_or_create(
+                    tipo_material=dest_material,
+                    metragem=preco.metragem,
+                    defaults={'preco_metro': preco.preco_metro}
+                )
+                if created:
+                    count_created += 1
+                else:
+                    count_updated += 1
+            
+            messages.success(
+                request, 
+                f'Cópia concluída! {count_created} criados, {count_updated} atualizados para {dest_material.nome}.'
+            )
+            
+        except TipoMaterial.DoesNotExist:
+            messages.error(request, 'Material não encontrado.')
+        except Exception as e:
+            messages.error(request, f'Erro ao copiar: {e}')
+            
+        return redirect('orcamento:tabelapreco_list')
+
+
+class TabelaPrecoPivotView(LoginRequiredMixin, GestorRequiredMixin, TemplateView):
+    """Visão pivot da tabela de preços (Materiais x Metragens)"""
+    template_name = 'orcamento/tabelas/tabelapreco_pivot.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Buscar todas as metragens únicas, ordenadas
+        metragens = list(TabelaPreco.objects.values_list('metragem', flat=True)
+                         .distinct().order_by('metragem'))
+        
+        # Buscar todos os materiais ativos, ordenados
+        materiais = TipoMaterial.objects.filter(ativo=True).order_by('ordem', 'nome')
+        
+        # Montar a estrutura de dados para a tabela pivot
+        # [
+        #   {
+        #     'material': material_obj,
+        #     'precos': {metragem: preco, ...}
+        #   },
+        #   ...
+        # ]
+        
+        pivot_data = []
+        
+        for material in materiais:
+            # Buscar preços deste material
+            precos = TabelaPreco.objects.filter(tipo_material=material)
+            precos_map = {p.metragem: p.preco_metro for p in precos}
+            
+            row = {
+                'material': material,
+                'precos': []
+            }
+            
+            # Preencher a lista de preços na ordem das colunas de metragens
+            for m in metragens:
+                valor = precos_map.get(m)
+                row['precos'].append({
+                    'metragem': m,
+                    'valor': valor,
+                    'existe': valor is not None
+                })
+                
+            pivot_data.append(row)
+            
+        context['metragens'] = metragens
+        context['pivot_data'] = pivot_data
+        
+        return context

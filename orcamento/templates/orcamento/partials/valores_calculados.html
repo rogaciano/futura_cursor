@@ -72,4 +72,27 @@
     <div class="mt-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
         <p><strong>Base:</strong> R$ {{ valores.preco_base|floatformat:5 }} × CF: {{ valores.coef_fator|floatformat:3 }} + Goma: R$ {{ valores.valor_goma|floatformat:5 }} × CC: {{ valores.cc|floatformat:3 }}</p>
     </div>
+
+    <!-- DETALHAMENTO DE CÁLCULO (DEBUG) -->
+    {% if debug_calculos or valores.debug_info %}
+    <div class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 font-mono text-xs shadow-lg border border-gray-600">
+        <h4 class="text-sm font-bold text-yellow-400 mb-3 border-b border-gray-600 pb-2 flex justify-between items-center">
+            <span>🛠️ DEBUG DE CÁLCULOS</span>
+            <span class="text-[10px] text-gray-400 font-normal">DEBUG_CALCULOS={{ debug_calculos }}</span>
+        </h4>
+        
+        <div class="grid grid-cols-2 gap-x-8 gap-y-2">
+            {% for passo in valores.debug_info.passos %}
+            <div class="flex justify-between hover:bg-gray-700 p-1 rounded border-b border-gray-700 border-dashed">
+                <span class="text-gray-400">{{ passo.label }}:</span>
+                <span class="font-bold text-green-400">{{ passo.valor }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="mt-4 pt-2 border-t border-gray-600 text-gray-400 italic text-center">
+            Valores calculados passo a passo conforme planilha
+        </div>
+    </div>
+    {% endif %}
 </div>

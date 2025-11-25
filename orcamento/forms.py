@@ -1,5 +1,5 @@
 from django import forms
-from .models import Orcamento, TipoMaterial, Batida, CoeficienteFator
+from .models import Orcamento, TipoMaterial, Batida, CoeficienteFator, TabelaPreco
 
 
 class OrcamentoForm(forms.ModelForm):
@@ -11,8 +11,8 @@ class OrcamentoForm(forms.ModelForm):
             'cliente', 'tipo_cliente', 'endereco', 'cidade', 'uf', 'cep',
             'telefone', 'email', 'numero_pedido', 'data_previsao_entrega',
             'tipo_material', 'batida', 'largura_mm', 'comprimento_mm',
-            'tipo_corte', 'cor_urdume', 'quantidade_metros', 'tabela_manual_metragem',
-            'tem_goma', 'tipo_goma', 'tem_ultrassonico',
+            'tipo_corte', 'textura', 'cor_urdume', 'quantidade_metros', 'tabela_manual_metragem',
+            'acabamento', 'tem_ultrassonico',
             'observacoes', 'marca', 'valor_frete',
         ]
         widgets = {
@@ -87,6 +87,9 @@ class OrcamentoForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 '@change': 'calcularValores()',
             }),
+            'textura': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+            }),
             'cor_urdume': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
             }),
@@ -111,11 +114,7 @@ class OrcamentoForm(forms.ModelForm):
                 'placeholder': 'Unidades por pacote',
                 'min': '1',
             }),
-            'tem_goma': forms.CheckboxInput(attrs={
-                'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500',
-                '@change': 'calcularValores()',
-            }),
-            'tipo_goma': forms.Select(attrs={
+            'acabamento': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 '@change': 'calcularValores()',
             }),
@@ -214,5 +213,28 @@ class CoeficienteFatorForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
                 'step': '0.00001',
                 'min': '0'
+            })
+        }
+
+
+class TabelaPrecoForm(forms.ModelForm):
+    """Formulário para Tabela de Preço"""
+    class Meta:
+        model = TabelaPreco
+        fields = ['metragem', 'tipo_material', 'preco_metro']
+        widgets = {
+            'metragem': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
+                'min': '1',
+                'placeholder': 'Ex: 100, 500, 1000'
+            }),
+            'tipo_material': forms.Select(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+            }),
+            'preco_metro': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
+                'step': '0.01',
+                'min': '0.01',
+                'placeholder': 'R$ 0.00'
             })
         }
