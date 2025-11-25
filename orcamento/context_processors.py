@@ -11,4 +11,3 @@ def system_info(request):
         'SYSTEM_NAME': getattr(settings, 'SYSTEM_NAME', 'Futura Etiquetas'),
         'SYSTEM_VERSION': getattr(settings, 'SYSTEM_VERSION', '1.0.0'),
     }
-
