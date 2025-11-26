@@ -30,3 +30,19 @@ def pode_editar(orcamento, user):
         return orcamento.pode_editar(user)
     return False
 
+
+@register.filter
+def status_icon(status):
+    """Retorna o ícone para cada status"""
+    icons = {
+        'digitando': '✏️',
+        'aguardando': '⏳',
+        'aprovado': '✅',
+        'reprovado': '❌',
+        'em_producao': '🏭',
+        'finalizado': '🏁',
+        'entregue': '🚚',
+        'cancelado': '🚫',
+    }
+    return icons.get(status, '📄')
+
