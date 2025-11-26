@@ -299,6 +299,18 @@ class Orcamento(models.Model):
         ('vermelho', 'Vermelho'),
         ('nenhum', 'Nenhum'),
     ]
+
+    # Definição dos Status
+    STATUS_CHOICES = [
+        ('digitando', 'Digitando'),
+        ('aguardando', 'Aguardando Aprovação'),
+        ('aprovado', 'Aprovado'),
+        ('reprovado', 'Reprovado'),
+        ('em_producao', 'Em Produção'),
+        ('finalizado', 'Finalizado'),
+        ('entregue', 'Entregue'),
+        ('cancelado', 'Cancelado'),
+    ]
     
     # Informações do Cliente
     cliente = models.CharField(max_length=200)
@@ -323,6 +335,14 @@ class Orcamento(models.Model):
         help_text="Vendedor responsável pelo orçamento"
     )
     
+    # Novo campo de status
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='digitando',
+        help_text="Status atual do fluxo do orçamento"
+    )
+
     # Especificações do Produto
     tipo_material = models.ForeignKey(TipoMaterial, on_delete=models.PROTECT)
     batida = models.ForeignKey(
@@ -428,6 +448,37 @@ class Orcamento(models.Model):
                     pass  # Se falhar o cálculo, salva mesmo assim
         
         super().save(*args, **kwargs)
+
+    def pode_editar(self, user):
+        """
+        Verifica se o usuário pode editar este orçamento.
+        - Gestores/Superusers: Podem se não estiver cancelado.
+        - Vendedores: Apenas se status for 'digitando' ou 'reprovado'.
+        """
+        # Superuser e Gestores têm mais permissões
+        if user.is_superuser or (hasattr(user, 'vendedor') and user.vendedor.is_gestor):
+            return self.status != 'cancelado'
+
+        # Vendedores comuns
+        return self.status in ['digitando', 'reprovado']
+
+
+class HistoricoStatusOrcamento(models.Model):
+    """Registra o histórico de mudanças de status do orçamento"""
+    orcamento = models.ForeignKey(Orcamento, on_delete=models.CASCADE, related_name='historico_status')
+    status_anterior = models.CharField(max_length=20, choices=Orcamento.STATUS_CHOICES, null=True, blank=True)
+    novo_status = models.CharField(max_length=20, choices=Orcamento.STATUS_CHOICES)
+    usuario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    data_mudanca = models.DateTimeField(auto_now_add=True)
+    observacao = models.TextField(blank=True, help_text="Motivo da mudança (opcional)")
+
+    class Meta:
+        verbose_name = 'Histórico de Status'
+        verbose_name_plural = 'Históricos de Status'
+        ordering = ['-data_mudanca']
+
+    def __str__(self):
+        return f"{self.orcamento.numero_pedido}: {self.status_anterior} -> {self.novo_status}"
 
 
 class CorOrcamento(models.Model):

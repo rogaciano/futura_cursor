@@ -8,6 +8,14 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ title }}</h1>
         <p class="text-gray-600">Preencha os dados abaixo para criar ou editar um orçamento</p>
+        {% if form.instance.pk and form.instance.status != 'digitando' and form.instance.status != 'reprovado' %}
+             <div class="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Atenção: Este orçamento está com status <strong>{{ form.instance.get_status_display }}</strong>. Apenas gestores podem alterar detalhes técnicos.
+             </div>
+        {% endif %}
     </div>
 
     <form method="post" class="space-y-6">
@@ -256,9 +264,20 @@
                 <a href="{% url 'orcamento:orcamento_list' %}" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
                     Cancelar
                 </a>
-                <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
-                    💾 Salvar Orçamento
+                
+                {% if form.instance.status == 'digitando' or form.instance.status == 'reprovado' or not form.instance.pk %}
+                <button type="submit" name="acao" value="salvar" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                    💾 Salvar Rascunho
                 </button>
+                <button type="submit" name="acao" value="enviar_aprovacao" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold flex items-center gap-2">
+                    🚀 Salvar e Enviar para Aprovação
+                </button>
+                {% else %}
+                    <!-- Se estiver em outro status (ex: aprovado), mostra apenas Salvar para Gestores -->
+                    <button type="submit" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+                        💾 Salvar Alterações
+                    </button>
+                {% endif %}
             </div>
         </div>
     </form>
@@ -327,6 +346,9 @@ function carregarBatidasMaterial(materialId) {
     fetch(`/api/material/${materialId}/opcoes-batidas/`)
         .then(response => response.json())
         .then(batidas => {
+            // Salva o valor atual se houver (para edição)
+            const valorAtual = batidaSelect.value;
+            
             batidaSelect.innerHTML = '<option value="">Selecione as batidas</option>';
             
             batidas.forEach(batida => {
@@ -338,8 +360,14 @@ function carregarBatidasMaterial(materialId) {
             
             batidaSelect.disabled = false;
             
-            // Se só tem uma opção, selecionar automaticamente
-            if (batidas.length === 1) {
+            // Tenta restaurar o valor ou selecionar se for único
+            if (valorAtual) {
+                 // Verifica se o valor atual ainda existe nas novas opções
+                 const exists = Array.from(batidaSelect.options).some(option => option.value == valorAtual);
+                 if (exists) {
+                     batidaSelect.value = valorAtual;
+                 }
+            } else if (batidas.length === 1) {
                 batidaSelect.value = batidas[0].id;
             }
         })
@@ -351,4 +379,3 @@ function carregarBatidasMaterial(materialId) {
 }
 </script>
 {% endblock %}
-

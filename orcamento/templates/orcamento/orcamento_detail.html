@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load orcamento_filters %}
 
 {% block title %}Orçamento {{ orcamento.numero_pedido }} - Sistema de Orçamentos{% endblock %}
 
@@ -8,18 +9,115 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <div class="flex justify-between items-start">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Orçamento #{{ orcamento.numero_pedido|default:"S/N" }}</h1>
+                <div class="flex items-center gap-3 mb-2">
+                    <h1 class="text-3xl font-bold text-gray-800">Orçamento #{{ orcamento.numero_pedido|default:"S/N" }}
+                    </h1>
+                    <span class="px-3 py-1 text-sm rounded-full font-semibold
+                        {% if orcamento.status == 'digitando' %}bg-gray-100 text-gray-800
+                        {% elif orcamento.status == 'aguardando' %}bg-yellow-100 text-yellow-800
+                        {% elif orcamento.status == 'aprovado' %}bg-green-100 text-green-800
+                        {% elif orcamento.status == 'em_producao' %}bg-blue-100 text-blue-800
+                        {% elif orcamento.status == 'finalizado' %}bg-purple-100 text-purple-800
+                        {% elif orcamento.status == 'entregue' %}bg-teal-100 text-teal-800
+                        {% elif orcamento.status == 'cancelado' %}bg-red-100 text-red-800
+                        {% elif orcamento.status == 'reprovado' %}bg-red-100 text-red-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ orcamento.get_status_display }}
+                    </span>
+                </div>
                 <p class="text-gray-600">Criado em {{ orcamento.data_emissao|date:"d/m/Y" }}</p>
             </div>
             <div class="flex gap-3">
-                <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                <!-- Ações do Gestor -->
+                {% if is_gestor %}
+                {% if orcamento.status == 'aguardando' %}
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'aprovado' %}"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                    ✅ Aprovar
+                </a>
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'reprovado' %}"
+                    class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                    ❌ Reprovar
+                </a>
+                {% elif orcamento.status == 'aprovado' %}
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'em_producao' %}"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    🏭 Produção
+                </a>
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'cancelado' %}"
+                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2">
+                    🚫 Cancelar
+                </a>
+                {% elif orcamento.status == 'em_producao' %}
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'finalizado' %}"
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2">
+                    🏁 Finalizar
+                </a>
+                {% elif orcamento.status == 'finalizado' %}
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'entregue' %}"
+                    class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition flex items-center gap-2">
+                    🚚 Entregar
+                </a>
+                {% endif %}
+
+                <!-- Reabrir caso cancelado (apenas gestor) -->
+                {% if orcamento.status == 'cancelado' %}
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'digitando' %}"
+                    class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja reabrir este orçamento?');">
+                    🔓 Reabrir
+                </a>
+                {% endif %}
+
+                {% endif %}
+
+                <!-- Ações do Vendedor -->
+                {% if not is_gestor and orcamento.status == 'digitando' or orcamento.status == 'reprovado' %}
+                <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'aguardando' %}"
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition flex items-center gap-2"
+                    onclick="return confirm('Confirma o envio para aprovação? Você não poderá mais editar após isso.');">
+                    🚀 Enviar para Aprovação
+                </a>
+                {% endif %}
+
+                {% if orcamento|pode_editar:request.user %}
+                <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}"
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
                     ✏️ Editar
                 </a>
-                <a href="{% url 'orcamento:orcamento_list' %}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
+                {% endif %}
+
+                <a href="{% url 'orcamento:orcamento_list' %}"
+                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition">
                     ← Voltar
                 </a>
             </div>
         </div>
+
+        <!-- Histórico de Status (Collapse) -->
+        <div x-data="{ open: false }" class="mt-4 border-t pt-4">
+            <button @click="open = !open" class="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-1">
+                <span x-text="open ? '▼' : '▶'"></span>
+                Ver Histórico de Status
+            </button>
+            <div x-show="open" class="mt-3 bg-gray-50 rounded p-3 text-sm">
+                <ul class="space-y-2">
+                    {% for hist in historico_status %}
+                    <li class="flex gap-3 text-gray-600">
+                        <span class="font-mono text-gray-400">{{ hist.data_mudanca|date:"d/m/Y H:i" }}</span>
+                        <span class="font-semibold text-gray-800">{{ hist.get_novo_status_display }}</span>
+                        <span class="text-gray-500">por {{ hist.usuario.username }}</span>
+                        {% if hist.observacao %}
+                        <span class="text-gray-400 italic">- {{ hist.observacao }}</span>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <li class="text-gray-400 italic">Nenhum histórico registrado.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
     </div>
 
     <!-- Dados do Cliente -->
@@ -87,9 +185,9 @@
                 <label class="text-sm font-medium text-gray-500">Textura</label>
                 <p class="text-gray-900">
                     {% if orcamento.textura %}
-                        {{ orcamento.textura.nome }}
+                    {{ orcamento.textura.nome }}
                     {% else %}
-                        <span class="text-gray-400">-</span>
+                    <span class="text-gray-400">-</span>
                     {% endif %}
                 </p>
             </div>
@@ -121,7 +219,8 @@
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Unidades</span>
-                    <span class="text-gray-900 font-semibold">{{ orcamento.quantidade_unidades|floatformat:0 }} un.</span>
+                    <span class="text-gray-900 font-semibold">{{ orcamento.quantidade_unidades|floatformat:0 }}
+                        un.</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Milheiros</span>
@@ -141,17 +240,19 @@
             <div class="space-y-3">
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Material / Acabamento</span>
-                    <span class="{% if orcamento.acabamento %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
+                    <span
+                        class="{% if orcamento.acabamento %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
                         {% if orcamento.acabamento %}
-                            ✓ {{ orcamento.acabamento.nome }}
+                        ✓ {{ orcamento.acabamento.nome }}
                         {% else %}
-                            ✗ Nenhum
+                        ✗ Nenhum
                         {% endif %}
                     </span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Corte Ultrassônico</span>
-                    <span class="{% if orcamento.tem_ultrassonico %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
+                    <span
+                        class="{% if orcamento.tem_ultrassonico %}text-green-600{% else %}text-gray-400{% endif %} font-semibold">
                         {% if orcamento.tem_ultrassonico %}✓ Sim{% else %}✗ Não{% endif %}
                     </span>
                 </div>
@@ -180,7 +281,7 @@
                 <p class="text-3xl font-bold text-green-600">R$ {{ orcamento.valor_total|floatformat:2 }}</p>
             </div>
         </div>
-        
+
         {% if orcamento.valor_frete %}
         <div class="mt-4 bg-white rounded-lg p-4 shadow">
             <div class="flex justify-between items-center">
@@ -189,19 +290,21 @@
             </div>
             <div class="flex justify-between items-center mt-2 pt-2 border-t">
                 <span class="text-gray-800 font-semibold">Total com Frete</span>
-                <span class="text-2xl font-bold text-green-600">R$ {{ orcamento.valor_total|add:orcamento.valor_frete|floatformat:2 }}</span>
+                <span class="text-2xl font-bold text-green-600">R$ {{
+                    orcamento.valor_total|add:orcamento.valor_frete|floatformat:2 }}</span>
             </div>
         </div>
         {% endif %}
-        
+
         <!-- DETALHAMENTO DE CÁLCULO (DEBUG) -->
         {% if debug_calculos and debug_info %}
         <div class="mt-6 p-4 bg-gray-800 rounded-lg text-gray-200 font-mono text-xs shadow-lg border border-gray-600">
-            <h4 class="text-sm font-bold text-yellow-400 mb-3 border-b border-gray-600 pb-2 flex justify-between items-center">
+            <h4
+                class="text-sm font-bold text-yellow-400 mb-3 border-b border-gray-600 pb-2 flex justify-between items-center">
                 <span>🛠️ DEBUG DE CÁLCULOS</span>
                 <span class="text-[10px] text-gray-400 font-normal">DEBUG_CALCULOS=True</span>
             </h4>
-            
+
             <div class="grid grid-cols-2 gap-x-8 gap-y-2">
                 {% for passo in debug_info.passos %}
                 <div class="flex justify-between hover:bg-gray-700 p-1 rounded border-b border-gray-700 border-dashed">
@@ -210,7 +313,7 @@
                 </div>
                 {% endfor %}
             </div>
-            
+
             <div class="mt-4 pt-2 border-t border-gray-600 text-gray-400 italic text-center">
                 Valores calculados passo a passo conforme planilha
             </div>
@@ -220,7 +323,7 @@
 
     <!-- Cores/Variantes -->
     {% include 'orcamento/partials/cores_display.html' %}
-    
+
     <!-- Observações -->
     {% if orcamento.observacoes %}
     <div class="bg-white rounded-lg shadow-md p-6">
@@ -230,4 +333,3 @@
     {% endif %}
 </div>
 {% endblock %}
-

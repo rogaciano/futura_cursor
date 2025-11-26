@@ -1,0 +1,29 @@
+graph TD
+    Start([Vendedor na Rua]) --> Vendas
+    
+    subgraph Gestao [Aprovacao da Gestao]
+        Vendas --> Cobranca{Aprovacao Financeira}
+        Cobranca -- Reprovado --> Cancelado
+        Cobranca -- Aprovado --> Desenho
+    end
+
+    subgraph PreImpressao [Pre-Impressao]
+        Desenho --> ArteAprovada{Arte OK}
+        ArteAprovada -- Ajuste --> Desenho
+        ArteAprovada -- Sim --> PCP
+    end
+
+    subgraph Fabrica [Chao de Fabrica]
+        PCP --> Producao
+        Producao --> Acabamento
+        Acabamento --> Controle{Qualidade}
+        Controle -- Refazer --> Producao
+        Controle -- OK --> Faturado
+    end
+
+    subgraph EntregaLogistica [Entrega]
+        Faturado --> Expedicao
+        Expedicao --> Fim([Entregue])
+    end
+
+    PCP -.-> Cancelado

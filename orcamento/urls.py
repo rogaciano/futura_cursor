@@ -22,6 +22,7 @@ urlpatterns = [
     path('orcamentos/novo/', views.OrcamentoCreateView.as_view(), name='orcamento_create'),
     path('orcamentos/<int:pk>/', views.OrcamentoDetailView.as_view(), name='orcamento_detail'),
     path('orcamentos/<int:pk>/editar/', views.OrcamentoUpdateView.as_view(), name='orcamento_update'),
+    path('orcamentos/<int:pk>/status/<str:novo_status>/', views.alterar_status_orcamento, name='orcamento_status'),
     
     # Menu Tabelas - Dashboard
     path('tabelas/', views_tabelas.tabelas_index, name='tabelas_index'),
@@ -59,4 +60,3 @@ urlpatterns = [
     path('api/material/<int:material_id>/batidas/', views.obter_batidas_material, name='batidas_material'),
     path('api/material/<int:material_id>/opcoes-batidas/', views.obter_opcoes_batidas, name='opcoes_batidas'),
 ]
-

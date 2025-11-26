@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load orcamento_filters %}
 
 {% block title %}Lista de Orçamentos - {{ SYSTEM_NAME }}{% endblock %}
 
@@ -13,6 +14,77 @@
             </a>
         </div>
         
+
+    <!-- Dashboard de Status - Filtros Rápidos -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Filtrar por Status</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+            <!-- Digitando -->
+            <a href="?status=digitando" class="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 border-l-4 border-gray-400 transition group">
+                <div class="text-center">
+                    <p class="text-gray-600 text-xs font-medium uppercase mb-1">Digitando</p>
+                    <p class="text-xl font-bold text-gray-700">{{ status_counts.digitando }}</p>
+                </div>
+            </a>
+
+            <!-- Aguardando -->
+            <a href="?status=aguardando" class="bg-yellow-50 hover:bg-yellow-100 rounded-lg p-3 border-l-4 border-yellow-400 transition group">
+                <div class="text-center">
+                    <p class="text-yellow-700 text-xs font-medium uppercase mb-1">Aguardando</p>
+                    <p class="text-xl font-bold text-yellow-600">{{ status_counts.aguardando }}</p>
+                </div>
+            </a>
+
+            <!-- Aprovado -->
+            <a href="?status=aprovado" class="bg-green-50 hover:bg-green-100 rounded-lg p-3 border-l-4 border-green-400 transition group">
+                <div class="text-center">
+                    <p class="text-green-700 text-xs font-medium uppercase mb-1">Aprovado</p>
+                    <p class="text-xl font-bold text-green-600">{{ status_counts.aprovado }}</p>
+                </div>
+            </a>
+
+            <!-- Em Produção -->
+            <a href="?status=em_producao" class="bg-blue-50 hover:bg-blue-100 rounded-lg p-3 border-l-4 border-blue-400 transition group">
+                <div class="text-center">
+                    <p class="text-blue-700 text-xs font-medium uppercase mb-1">Produção</p>
+                    <p class="text-xl font-bold text-blue-600">{{ status_counts.em_producao }}</p>
+                </div>
+            </a>
+
+            <!-- Finalizado -->
+            <a href="?status=finalizado" class="bg-purple-50 hover:bg-purple-100 rounded-lg p-3 border-l-4 border-purple-400 transition group">
+                <div class="text-center">
+                    <p class="text-purple-700 text-xs font-medium uppercase mb-1">Finalizado</p>
+                    <p class="text-xl font-bold text-purple-600">{{ status_counts.finalizado }}</p>
+                </div>
+            </a>
+
+            <!-- Entregue -->
+            <a href="?status=entregue" class="bg-teal-50 hover:bg-teal-100 rounded-lg p-3 border-l-4 border-teal-400 transition group">
+                <div class="text-center">
+                    <p class="text-teal-700 text-xs font-medium uppercase mb-1">Entregue</p>
+                    <p class="text-xl font-bold text-teal-600">{{ status_counts.entregue }}</p>
+                </div>
+            </a>
+
+            <!-- Cancelado -->
+            <a href="?status=cancelado" class="bg-red-50 hover:bg-red-100 rounded-lg p-3 border-l-4 border-red-400 transition group">
+                <div class="text-center">
+                    <p class="text-red-700 text-xs font-medium uppercase mb-1">Cancelado</p>
+                    <p class="text-xl font-bold text-red-600">{{ status_counts.cancelado }}</p>
+                </div>
+            </a>
+
+            <!-- Reprovado -->
+            <a href="?status=reprovado" class="bg-orange-50 hover:bg-orange-100 rounded-lg p-3 border-l-4 border-orange-400 transition group">
+                <div class="text-center">
+                    <p class="text-orange-700 text-xs font-medium uppercase mb-1">Reprovado</p>
+                    <p class="text-xl font-bold text-orange-600">{{ status_counts.reprovado }}</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
         <!-- Filtros -->
         <form method="get" class="grid grid-cols-1 md:grid-cols-{% if is_gestor %}4{% else %}3{% endif %} gap-4">
             <div>
@@ -74,7 +146,20 @@
                     {% for orcamento in orcamentos %}
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ orcamento.numero_pedido|default:"—" }}
+                                                    </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span class="px-2 py-1 text-xs rounded-full font-semibold
+                                {% if orcamento.status == 'digitando' %}bg-gray-100 text-gray-800
+                                {% elif orcamento.status == 'aguardando' %}bg-yellow-100 text-yellow-800
+                                {% elif orcamento.status == 'aprovado' %}bg-green-100 text-green-800
+                                {% elif orcamento.status == 'em_producao' %}bg-blue-100 text-blue-800
+                                {% elif orcamento.status == 'finalizado' %}bg-purple-100 text-purple-800
+                                {% elif orcamento.status == 'entregue' %}bg-teal-100 text-teal-800
+                                {% elif orcamento.status == 'cancelado' %}bg-red-100 text-red-800
+                                {% elif orcamento.status == 'reprovado' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ orcamento.get_status_display }}
+                            </span>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                             <div class="font-medium truncate max-w-[150px]" title="{{ orcamento.cliente }}">{{ orcamento.cliente }}</div>
@@ -120,12 +205,20 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                     </svg>
                                 </a>
-                                <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" 
+                                {% if orcamento|pode_editar:request.user %}
+                                    <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" 
                                    class="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50 transition" title="Editar orçamento">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </a>
+                                {% else %}
+                                    <span class="text-gray-300 p-1.5 cursor-not-allowed" title="Bloqueado para edição">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </span>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

@@ -3,16 +3,18 @@ from django.views.generic import ListView, CreateView, UpdateView, DetailView
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import AuthenticationForm
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from decimal import Decimal
 import json
 from .models import (
     Orcamento, TipoMaterial, TipoCorte, TabelaPreco,
-    CoeficienteFator, ValorGoma, Textura, Vendedor, CorOrcamento
+    CoeficienteFator, ValorGoma, Textura, Vendedor, CorOrcamento,
+    HistoricoStatusOrcamento
 )
 from .forms import OrcamentoForm
 
@@ -92,6 +94,7 @@ class OrcamentoListView(LoginRequiredMixin, ListView):
         cliente = self.request.GET.get('cliente')
         tipo_material = self.request.GET.get('tipo_material')
         vendedor_id = self.request.GET.get('vendedor')
+        status = self.request.GET.get('status')
         
         if cliente:
             queryset = queryset.filter(cliente__icontains=cliente)
@@ -99,6 +102,8 @@ class OrcamentoListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(tipo_material_id=tipo_material)
         if vendedor_id:
             queryset = queryset.filter(vendedor_id=vendedor_id)
+        if status:
+            queryset = queryset.filter(status=status)
         
         return queryset
     
@@ -106,16 +111,38 @@ class OrcamentoListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['tipos_material'] = TipoMaterial.objects.filter(ativo=True)
         
-        # Se for gestor, mostra filtro de vendedores
+        # Determinar queryset base para contagem de status (respeitando permissões)
         try:
             vendedor = self.request.user.vendedor
             if vendedor.is_gestor:
+                # Gestor vê todos os orçamentos
+                orcamentos_base = Orcamento.objects.filter(ativo=True)
                 context['vendedores'] = Vendedor.objects.filter(ativo=True)
                 context['is_gestor'] = True
+            else:
+                # Vendedor vê apenas seus orçamentos
+                orcamentos_base = Orcamento.objects.filter(vendedor=vendedor, ativo=True)
         except Vendedor.DoesNotExist:
             if self.request.user.is_superuser:
+                # Superuser vê todos
+                orcamentos_base = Orcamento.objects.filter(ativo=True)
                 context['vendedores'] = Vendedor.objects.filter(ativo=True)
                 context['is_gestor'] = True
+            else:
+                orcamentos_base = Orcamento.objects.none()
+        
+        # Contagem de orçamentos por status
+        status_counts = {
+            'digitando': orcamentos_base.filter(status='digitando').count(),
+            'aguardando': orcamentos_base.filter(status='aguardando').count(),
+            'aprovado': orcamentos_base.filter(status='aprovado').count(),
+            'em_producao': orcamentos_base.filter(status='em_producao').count(),
+            'finalizado': orcamentos_base.filter(status='finalizado').count(),
+            'entregue': orcamentos_base.filter(status='entregue').count(),
+            'cancelado': orcamentos_base.filter(status='cancelado').count(),
+            'reprovado': orcamentos_base.filter(status='reprovado').count(),
+        }
+        context['status_counts'] = status_counts
         
         return context
 
@@ -146,9 +173,20 @@ class OrcamentoCreateView(LoginRequiredMixin, CreateView):
                 messages.error(self.request, 'Usuário não está vinculado a um vendedor.')
                 return redirect('orcamento:orcamento_list')
         
+        # Define status inicial sempre como 'digitando' ao criar
+        form.instance.status = 'digitando'
+
         # Salvar o orçamento primeiro
         response = super().form_valid(form)
         
+        # Registrar histórico inicial
+        HistoricoStatusOrcamento.objects.create(
+            orcamento=form.instance,
+            novo_status='digitando',
+            usuario=self.request.user,
+            observacao='Criação do orçamento'
+        )
+
         # Processar e salvar cores
         self._processar_cores(form.instance)
         
@@ -209,6 +247,13 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('orcamento:orcamento_list')
     login_url = 'orcamento:login'
     
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        # Usa o método do modelo para verificar permissão
+        if not obj.pode_editar(self.request.user):
+             raise PermissionDenied("Você não tem permissão para editar este orçamento neste status.")
+        return obj
+
     def get_queryset(self):
         queryset = super().get_queryset()
         
@@ -266,6 +311,35 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
         return context
     
     def form_valid(self, form):
+        # Se for vendedor editando, garante status digitando ou aguardando se for submissão
+        acao = self.request.POST.get('acao', 'salvar') # salvar ou enviar_aprovacao
+        
+        if acao == 'enviar_aprovacao':
+            status_anterior = form.instance.status
+            form.instance.status = 'aguardando'
+            
+            if status_anterior != 'aguardando':
+                HistoricoStatusOrcamento.objects.create(
+                    orcamento=form.instance,
+                    status_anterior=status_anterior,
+                    novo_status='aguardando',
+                    usuario=self.request.user,
+                    observacao='Enviado para aprovação'
+                )
+                messages.info(self.request, 'Orçamento enviado para aprovação.')
+        elif form.instance.status == 'reprovado':
+             # Ao editar um reprovado, volta para digitando para o vendedor corrigir
+             status_anterior = form.instance.status
+             form.instance.status = 'digitando'
+             
+             HistoricoStatusOrcamento.objects.create(
+                orcamento=form.instance,
+                status_anterior=status_anterior,
+                novo_status='digitando',
+                usuario=self.request.user,
+                observacao='Reiniciado edição após reprovação'
+            )
+
         # Salvar o orçamento primeiro
         response = super().form_valid(form)
         
@@ -345,6 +419,15 @@ class OrcamentoDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
+        # Verificar permissões para botões de ação do gestor
+        is_gestor = self.request.user.is_superuser or (
+            hasattr(self.request.user, 'vendedor') and self.request.user.vendedor.is_gestor
+        )
+        context['is_gestor'] = is_gestor
+        
+        # Histórico de status
+        context['historico_status'] = self.object.historico_status.all().select_related('usuario')
+
         # Adicionar dados de debug se flag estiver ativa
         from django.conf import settings
         if getattr(settings, 'DEBUG_CALCULOS', False):
@@ -494,6 +577,18 @@ def dashboard_vendedor(request):
     # Estatísticas do vendedor
     meus_orcamentos = Orcamento.objects.filter(vendedor=vendedor, ativo=True)
     
+    # Contagem de orçamentos por status
+    status_counts = {
+        'digitando': meus_orcamentos.filter(status='digitando').count(),
+        'aguardando': meus_orcamentos.filter(status='aguardando').count(),
+        'aprovado': meus_orcamentos.filter(status='aprovado').count(),
+        'em_producao': meus_orcamentos.filter(status='em_producao').count(),
+        'finalizado': meus_orcamentos.filter(status='finalizado').count(),
+        'entregue': meus_orcamentos.filter(status='entregue').count(),
+        'cancelado': meus_orcamentos.filter(status='cancelado').count(),
+        'reprovado': meus_orcamentos.filter(status='reprovado').count(),
+    }
+    
     context = {
         'vendedor': vendedor,
         'total_orcamentos': meus_orcamentos.count(),
@@ -501,6 +596,7 @@ def dashboard_vendedor(request):
         'valor_total_mes': meus_orcamentos.filter(
             data_emissao__gte=mes_atual
         ).aggregate(total=Sum('valor_total'))['total'] or Decimal('0.0'),
+        'status_counts': status_counts,
         'orcamentos_recentes': meus_orcamentos.order_by('-criado_em')[:10],
         'meta_mensal': vendedor.meta_mensal,
         'percentual_meta': vendedor.percentual_meta(),
@@ -512,7 +608,7 @@ def dashboard_vendedor(request):
 @login_required
 def dashboard_gestor(request):
     """Dashboard do gestor - vê todos os dados"""
-    from django.db.models import Sum, Count, Avg
+    from django.db.models import Sum, Count, Avg, Q
     from datetime import datetime
     
     # Verificar se é gestor
@@ -529,8 +625,21 @@ def dashboard_gestor(request):
     hoje = datetime.now().date()
     mes_atual = hoje.replace(day=1)
     
+    # Contagem de orçamentos por status
+    orcamentos_ativos = Orcamento.objects.filter(ativo=True)
+    status_counts = {
+        'digitando': orcamentos_ativos.filter(status='digitando').count(),
+        'aguardando': orcamentos_ativos.filter(status='aguardando').count(),
+        'aprovado': orcamentos_ativos.filter(status='aprovado').count(),
+        'em_producao': orcamentos_ativos.filter(status='em_producao').count(),
+        'finalizado': orcamentos_ativos.filter(status='finalizado').count(),
+        'entregue': orcamentos_ativos.filter(status='entregue').count(),
+        'cancelado': orcamentos_ativos.filter(status='cancelado').count(),
+        'reprovado': orcamentos_ativos.filter(status='reprovado').count(),
+    }
+    
     context = {
-        'total_orcamentos': Orcamento.objects.filter(ativo=True).count(),
+        'total_orcamentos': orcamentos_ativos.count(),
         'orcamentos_mes': Orcamento.objects.filter(
             data_emissao__gte=mes_atual,
             ativo=True
@@ -539,6 +648,7 @@ def dashboard_gestor(request):
             data_emissao__gte=mes_atual,
             ativo=True
         ).aggregate(total=Sum('valor_total'))['total'] or Decimal('0.0'),
+        'status_counts': status_counts,
         'orcamentos_recentes': Orcamento.objects.filter(
             ativo=True
         ).select_related('vendedor', 'tipo_material').order_by('-criado_em')[:10],
@@ -546,11 +656,11 @@ def dashboard_gestor(request):
             total=Count('orcamento')
         ).order_by('-total')[:5],
         'vendedores_ranking': Vendedor.objects.filter(ativo=True).annotate(
-            total_vendas=Sum('orcamentos__valor_total', filter=models.Q(
+            total_vendas=Sum('orcamentos__valor_total', filter=Q(
                 orcamentos__data_emissao__gte=mes_atual,
                 orcamentos__ativo=True
             )),
-            qtd_orcamentos=Count('orcamentos', filter=models.Q(
+            qtd_orcamentos=Count('orcamentos', filter=Q(
                 orcamentos__data_emissao__gte=mes_atual,
                 orcamentos__ativo=True
             ))
@@ -566,3 +676,45 @@ def dashboard_gestor(request):
 def dashboard(request):
     """Redireciona para dashboard apropriado"""
     return index(request)
+
+@login_required
+def alterar_status_orcamento(request, pk, novo_status):
+    """
+    View para alterar o status de um orçamento.
+    Apenas gestores podem alterar para aprovado/cancelado.
+    Vendedores podem alterar para aguardando (enviar para aprovação).
+    """
+    orcamento = get_object_or_404(Orcamento, pk=pk)
+    is_gestor = request.user.is_superuser or (hasattr(request.user, 'vendedor') and request.user.vendedor.is_gestor)
+    
+    status_permitidos = dict(Orcamento.STATUS_CHOICES)
+    if novo_status not in status_permitidos:
+        messages.error(request, 'Status inválido.')
+        return redirect('orcamento:orcamento_detail', pk=pk)
+
+    # Lógica de permissão
+    if not is_gestor:
+        # Vendedor só pode enviar para aprovação se estiver digitando ou reprovado
+        if novo_status == 'aguardando' and orcamento.status in ['digitando', 'reprovado']:
+            pass # OK
+        else:
+            messages.error(request, 'Você não tem permissão para realizar esta alteração de status.')
+            return redirect('orcamento:orcamento_detail', pk=pk)
+    
+    # Registro no histórico
+    status_anterior = orcamento.status
+    if status_anterior != novo_status:
+        orcamento.status = novo_status
+        orcamento.save()
+        
+        HistoricoStatusOrcamento.objects.create(
+            orcamento=orcamento,
+            status_anterior=status_anterior,
+            novo_status=novo_status,
+            usuario=request.user,
+            observacao=f'Alteração manual de status para {status_permitidos[novo_status]}'
+        )
+        
+        messages.success(request, f'Status alterado para {status_permitidos[novo_status]}!')
+    
+    return redirect('orcamento:orcamento_detail', pk=pk)

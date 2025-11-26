@@ -22,3 +22,11 @@ def sum_field(queryset, field_name):
             total += value or 0
     return total
 
+
+@register.filter
+def pode_editar(orcamento, user):
+    """Verifica se o usuário pode editar o orçamento"""
+    if hasattr(orcamento, 'pode_editar') and callable(orcamento.pode_editar):
+        return orcamento.pode_editar(user)
+    return False
+

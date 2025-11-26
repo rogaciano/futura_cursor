@@ -20,7 +20,8 @@
                 </div>
                 <div class="bg-blue-100 rounded-full p-4">
                     <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </div>
             </div>
@@ -34,7 +35,8 @@
                 </div>
                 <div class="bg-green-100 rounded-full p-4">
                     <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
             </div>
@@ -48,7 +50,8 @@
                 </div>
                 <div class="bg-purple-100 rounded-full p-4">
                     <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
             </div>
@@ -63,7 +66,8 @@
                 </div>
                 <div class="bg-orange-100 rounded-full p-4">
                     <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
                 </div>
             </div>
@@ -77,7 +81,9 @@
             <span class="text-sm text-gray-600">{{ percentual_meta|floatformat:1 }}% atingido</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-4">
-            <div class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500" style="width: {% if percentual_meta > 100 %}100{% else %}{{ percentual_meta|floatformat:0 }}{% endif %}%"></div>
+            <div class="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full transition-all duration-500"
+                style="width: {% if percentual_meta > 100 %}100{% else %}{{ percentual_meta|floatformat:0 }}{% endif %}%">
+            </div>
         </div>
         <div class="flex justify-between mt-2 text-sm text-gray-600">
             <span>R$ {{ valor_total_mes|floatformat:2 }}</span>
@@ -85,9 +91,154 @@
         </div>
     </div>
 
+    <!-- Orçamentos por Status -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b pb-2">Meus Orçamentos por Status</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Digitando -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=digitando"
+                class="bg-gray-50 hover:bg-gray-100 rounded-lg p-4 border-l-4 border-gray-400 transition">
+                <div class="flex items-center justif y-between">
+                    <div>
+                        <p class="text-gray-600 text-xs font-medium uppercase">Digitando</p>
+                        <p class="text-2xl font-bold text-gray-700 mt-1">{{ status_counts.digitando }}</p>
+                    </div>
+                    <div class="bg-gray-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Aguardando Aprovação -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=aguardando"
+                class="bg-yellow-50 hover:bg-yellow-100 rounded-lg p-4 border-l-4 border-yellow-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-yellow-700 text-xs font-medium uppercase">Aguardando</p>
+                        <p class="text-2xl font-bold text-yellow-600 mt-1">{{ status_counts.aguardando }}</p>
+                    </div>
+                    <div class="bg-yellow-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Aprovado -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=aprovado"
+                class="bg-green-50 hover:bg-green-100 rounded-lg p-4 border-l-4 border-green-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-700 text-xs font-medium uppercase">Aprovado</p>
+                        <p class="text-2xl font-bold text-green-600 mt-1">{{ status_counts.aprovado }}</p>
+                    </div>
+                    <div class="bg-green-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Em Produção -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=em_producao"
+                class="bg-blue-50 hover:bg-blue-100 rounded-lg p-4 border-l-4 border-blue-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-blue-700 text-xs font-medium uppercase">Em Produção</p>
+                        <p class="text-2xl font-bold text-blue-600 mt-1">{{ status_counts.em_producao }}</p>
+                    </div>
+                    <div class="bg-blue-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Finalizado -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=finalizado"
+                class="bg-purple-50 hover:bg-purple-100 rounded-lg p-4 border-l-4 border-purple-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-700 text-xs font-medium uppercase">Finalizado</p>
+                        <p class="text-2xl font-bold text-purple-600 mt-1">{{ status_counts.finalizado }}</p>
+                    </div>
+                    <div class="bg-purple-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Entregue -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=entregue"
+                class="bg-teal-50 hover:bg-teal-100 rounded-lg p-4 border-l-4 border-teal-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-teal-700 text-xs font-medium uppercase">Entregue</p>
+                        <p class="text-2xl font-bold text-teal-600 mt-1">{{ status_counts.entregue }}</p>
+                    </div>
+                    <div class="bg-teal-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Cancelado -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=cancelado"
+                class="bg-red-50 hover:bg-red-100 rounded-lg p-4 border-l-4 border-red-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-red-700 text-xs font-medium uppercase">Cancelado</p>
+                        <p class="text-2xl font-bold text-red-600 mt-1">{{ status_counts.cancelado }}</p>
+                    </div>
+                    <div class="bg-red-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Reprovado -->
+            <a href="{% url 'orcamento:orcamento_list' %}?status=reprovado"
+                class="bg-orange-50 hover:bg-orange-100 rounded-lg p-4 border-l-4 border-orange-400 transition">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-orange-700 text-xs font-medium uppercase">Reprovado</p>
+                        <p class="text-2xl font-bold text-orange-600 mt-1">{{ status_counts.reprovado }}</p>
+                    </div>
+                    <div class="bg-orange-200 rounded-full p-2">
+                        <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <a href="{% url 'orcamento:orcamento_create' %}" class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition transform hover:scale-105">
+        <a href="{% url 'orcamento:orcamento_create' %}"
+            class="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition transform hover:scale-105">
             <div class="flex items-center">
                 <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,11 +252,13 @@
             </div>
         </a>
 
-        <a href="{% url 'orcamento:orcamento_list' %}" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition transform hover:scale-105">
+        <a href="{% url 'orcamento:orcamento_list' %}"
+            class="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition transform hover:scale-105">
             <div class="flex items-center">
                 <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
                 </div>
                 <div>
@@ -115,11 +268,13 @@
             </div>
         </a>
 
-        <a href="{% url 'orcamento:logout' %}" class="bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition transform hover:scale-105">
+        <a href="{% url 'orcamento:logout' %}"
+            class="bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition transform hover:scale-105">
             <div class="flex items-center">
                 <div class="bg-white bg-opacity-20 rounded-full p-3 mr-4">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                 </div>
                 <div>
@@ -140,12 +295,18 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pedido</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Cliente</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Material</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor
+                            Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -169,10 +330,12 @@
                             R$ {{ orcamento.valor_total|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <a href="{% url 'orcamento:orcamento_detail' orcamento.pk %}" class="text-blue-600 hover:text-blue-800 mr-3">
+                            <a href="{% url 'orcamento:orcamento_detail' orcamento.pk %}"
+                                class="text-blue-600 hover:text-blue-800 mr-3">
                                 Ver
                             </a>
-                            <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}" class="text-green-600 hover:text-green-800">
+                            <a href="{% url 'orcamento:orcamento_update' orcamento.pk %}"
+                                class="text-green-600 hover:text-green-800">
                                 Editar
                             </a>
                         </td>
@@ -182,7 +345,8 @@
             </table>
         </div>
         <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <a href="{% url 'orcamento:orcamento_list' %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+            <a href="{% url 'orcamento:orcamento_list' %}"
+                class="text-blue-600 hover:text-blue-800 font-medium text-sm">
                 Ver todos os meus orçamentos →
             </a>
         </div>
@@ -190,4 +354,3 @@
     {% endif %}
 </div>
 {% endblock %}
-
