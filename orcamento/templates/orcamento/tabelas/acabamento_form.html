@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if object %}Editar{% else %}Novo{% endif %} Acabamento - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">{% if object %}Editar{% else %}Novo{% endif %} Acabamento</h1>
+        <p class="mt-2 text-gray-600">Preencha os dados do material de acabamento.</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-700">{{ form.non_field_errors.0 }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 gap-6">
+                <!-- Nome -->
+                <div>
+                    <label for="{{ form.nome.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Nome</label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.nome.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Código -->
+                <div>
+                    <label for="{{ form.codigo.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Código</label>
+                    {{ form.codigo }}
+                    {% if form.codigo.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.codigo.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Ordem -->
+                <div>
+                    <label for="{{ form.ordem.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">Ordem de Exibição</label>
+                    {{ form.ordem }}
+                    {% if form.ordem.errors %}
+                    <p class="mt-1 text-sm text-red-600">{{ form.ordem.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Ativo -->
+                <div class="flex items-center">
+                    {{ form.ativo }}
+                    <label for="{{ form.ativo.id_for_label }}" class="ml-2 block text-sm text-gray-900">
+                        Ativo
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-4 pt-4 border-t mt-6">
+                <a href="{% url 'orcamento:acabamento_list' %}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {% if object %}
+    <!-- Gerenciamento de Preços do Acabamento -->
+    <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">Preços por Largura</h2>
+            <button onclick="document.getElementById('modal-novo-preco').classList.remove('hidden')" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                + Adicionar Preço
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Largura Máxima (mm)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço (R$)</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for preco in object.precos.all|dictsort:"largura_mm" %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ preco.largura_mm }} mm</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R$ {{ preco.preco }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <form method="post" action="{% url 'orcamento:preco_acabamento_delete' preco.pk %}" onsubmit="return confirm('Tem certeza que deseja excluir este preço?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:text-red-900">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">Nenhum preço cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Novo Preço -->
+    <div id="modal-novo-preco" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden" x-show="open">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">Novo Preço</h3>
+                <form method="post" action="{% url 'orcamento:preco_acabamento_create' object.pk %}" class="mt-4 text-left">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Largura Máxima (mm)</label>
+                        <input type="number" name="largura_mm" required min="1" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Preço (R$)</label>
+                        <input type="number" name="preco" required step="0.00001" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="document.getElementById('modal-novo-preco').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Adicionar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

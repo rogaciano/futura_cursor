@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Matriz de Preços de Acabamentos - Sistema de Orçamentos{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+                📊 Matriz de Acabamentos (Visão Matriz)
+            </h1>
+            <p class="mt-2 text-gray-600">
+                Visualização matricial de preços por acabamento e largura
+            </p>
+        </div>
+        <div class="flex space-x-4">
+            <a href="{% url 'orcamento:acabamento_list' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                📋 Visão Lista
+            </a>
+            <a href="{% url 'orcamento:acabamento_create' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                + Novo Acabamento
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-x-auto">
+        <div class="min-w-full inline-block align-middle">
+            <div class="border-b border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10 border-r border-gray-200 shadow-sm">
+                                Material / Acabamento
+                            </th>
+                            {% for largura in larguras %}
+                            <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                                Até {{ largura }}mm
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for row in pivot_data %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white z-10 border-r border-gray-200">
+                                {{ row.acabamento.nome }}
+                            </td>
+                            {% for preco in row.precos %}
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-center border-l border-dashed border-gray-100">
+                                {% if preco.existe %}
+                                    <span class="font-medium text-green-600 hover:text-green-800 cursor-default" title="R$ {{ preco.valor|floatformat:5 }} para até {{ preco.largura_mm }}mm">
+                                        R$ {{ preco.valor|floatformat:5 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-gray-300 text-xs">-</span>
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="{{ larguras|length|add:1 }}" class="px-6 py-8 text-center text-gray-500">
+                                Nenhum dado disponível. Cadastre acabamentos e preços primeiro.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4 text-sm text-gray-500">
+        <p>ℹ️ Use a rolagem horizontal para ver todas as larguras caso a tabela seja muito larga.</p>
+    </div>
+    
+    <div class="mt-6">
+        <a href="{% url 'orcamento:tabelas_index' %}" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+            ← Voltar para Tabelas
+        </a>
+    </div>
+</div>
+{% endblock %}

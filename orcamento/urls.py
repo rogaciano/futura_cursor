@@ -23,6 +23,7 @@ urlpatterns = [
     path('orcamentos/<int:pk>/', views.OrcamentoDetailView.as_view(), name='orcamento_detail'),
     path('orcamentos/<int:pk>/editar/', views.OrcamentoUpdateView.as_view(), name='orcamento_update'),
     path('orcamentos/<int:pk>/status/<str:novo_status>/', views.alterar_status_orcamento, name='orcamento_status'),
+    path('orcamentos/<int:pk>/reverter-status/', views.reverter_status_orcamento, name='orcamento_reverter_status'),
     
     # Menu Tabelas - Dashboard
     path('tabelas/', views_tabelas.tabelas_index, name='tabelas_index'),
@@ -53,6 +54,17 @@ urlpatterns = [
     path('tabelas/precos/<int:pk>/deletar/', views_tabelas.TabelaPrecoDeleteView.as_view(), name='tabelapreco_delete'),
     path('tabelas/precos/copiar/', views_tabelas.TabelaPrecoCopyView.as_view(), name='tabelapreco_copy'),
     path('tabelas/precos/pivot/', views_tabelas.TabelaPrecoPivotView.as_view(), name='tabelapreco_pivot'),
+    
+    # Acabamentos (CRUD)
+    path('tabelas/acabamentos/', views_tabelas.AcabamentoListView.as_view(), name='acabamento_list'),
+    path('tabelas/acabamentos/pivot/', views_tabelas.AcabamentoPivotView.as_view(), name='acabamento_pivot'),
+    path('tabelas/acabamentos/novo/', views_tabelas.AcabamentoCreateView.as_view(), name='acabamento_create'),
+    path('tabelas/acabamentos/<int:pk>/editar/', views_tabelas.AcabamentoUpdateView.as_view(), name='acabamento_update'),
+    path('tabelas/acabamentos/<int:pk>/deletar/', views_tabelas.AcabamentoDeleteView.as_view(), name='acabamento_delete'),
+    
+    # Preços de Acabamento
+    path('tabelas/acabamentos/<int:acabamento_id>/preco/novo/', views_tabelas.PrecoAcabamentoCreateView.as_view(), name='preco_acabamento_create'),
+    path('tabelas/acabamentos/preco/<int:pk>/deletar/', views_tabelas.PrecoAcabamentoDeleteView.as_view(), name='preco_acabamento_delete'),
     
     # AJAX/HTMX endpoints
     path('api/calcular/', views.calcular_orcamento_ajax, name='calcular_ajax'),

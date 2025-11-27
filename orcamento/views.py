@@ -163,6 +163,11 @@ class OrcamentoCreateView(LoginRequiredMixin, CreateView):
         context['texturas'] = Textura.objects.filter(ativo=True)
         return context
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+    
     def form_valid(self, form):
         # Vincula automaticamente ao vendedor logado
         try:
@@ -309,6 +314,11 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
             context['debug_calculos'] = True
         
         return context
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
     
     def form_valid(self, form):
         # Se for vendedor editando, garante status digitando ou aguardando se for submissão
@@ -717,4 +727,42 @@ def alterar_status_orcamento(request, pk, novo_status):
         
         messages.success(request, f'Status alterado para {status_permitidos[novo_status]}!')
     
+    return redirect('orcamento:orcamento_detail', pk=pk)
+
+@login_required
+def reverter_status_orcamento(request, pk):
+    """
+    Reverte o status do orçamento para o status anterior baseado no histórico.
+    """
+    orcamento = get_object_or_404(Orcamento, pk=pk)
+    is_gestor = request.user.is_superuser or (hasattr(request.user, 'vendedor') and request.user.vendedor.is_gestor)
+
+    if not is_gestor:
+        messages.error(request, 'Apenas gestores podem reverter status.')
+        return redirect('orcamento:orcamento_detail', pk=pk)
+
+    # Pega o último histórico para saber o status anterior
+    ultimo_historico = orcamento.historico_status.order_by('-data_mudanca').first()
+
+    if not ultimo_historico or not ultimo_historico.status_anterior:
+        messages.warning(request, 'Não há histórico de status anterior para reverter.')
+        return redirect('orcamento:orcamento_detail', pk=pk)
+
+    status_anterior = ultimo_historico.status_anterior
+    status_atual = orcamento.status
+
+    # Reverte o status
+    orcamento.status = status_anterior
+    orcamento.save()
+
+    # Registra o revert no histórico
+    HistoricoStatusOrcamento.objects.create(
+        orcamento=orcamento,
+        status_anterior=status_atual,
+        novo_status=status_anterior,
+        usuario=request.user,
+        observacao=f'Reversão de status: {status_atual} -> {status_anterior}'
+    )
+    
+    messages.success(request, f'Status revertido com sucesso para {orcamento.get_status_display()}!')
     return redirect('orcamento:orcamento_detail', pk=pk)

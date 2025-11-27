@@ -32,30 +32,36 @@
                 {% if is_gestor %}
                 {% if orcamento.status == 'aguardando' %}
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'aprovado' %}"
-                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2">
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja APROVAR este orçamento?');">
                     ✅ Aprovar
                 </a>
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'reprovado' %}"
-                    class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                    class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja REPROVAR este orçamento?');">
                     ❌ Reprovar
                 </a>
                 {% elif orcamento.status == 'aprovado' %}
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'em_producao' %}"
-                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja enviar para PRODUÇÃO?');">
                     🏭 Produção
                 </a>
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'cancelado' %}"
-                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2">
+                    class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja CANCELAR este orçamento?');">
                     🚫 Cancelar
                 </a>
                 {% elif orcamento.status == 'em_producao' %}
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'finalizado' %}"
-                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2">
+                    class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja FINALIZAR este orçamento?');">
                     🏁 Finalizar
                 </a>
                 {% elif orcamento.status == 'finalizado' %}
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'entregue' %}"
-                    class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition flex items-center gap-2">
+                    class="bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja marcar como ENTREGUE?');">
                     🚚 Entregar
                 </a>
                 {% endif %}
@@ -64,8 +70,17 @@
                 {% if orcamento.status == 'cancelado' %}
                 <a href="{% url 'orcamento:orcamento_status' orcamento.pk 'digitando' %}"
                     class="bg-yellow-500 text-white px-4 py-2 rounded-lg hover:bg-yellow-600 transition flex items-center gap-2"
-                    onclick="return confirm('Tem certeza que deseja reabrir este orçamento?');">
+                    onclick="return confirm('Tem certeza que deseja REABRIR este orçamento?');">
                     🔓 Reabrir
+                </a>
+                {% endif %}
+
+                <!-- Botão de Reverter (apenas gestor e se houver histórico) -->
+                {% if orcamento.historico_status.exists %}
+                <a href="{% url 'orcamento:orcamento_reverter_status' orcamento.pk %}"
+                    class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition flex items-center gap-2"
+                    onclick="return confirm('Tem certeza que deseja REVERTER para o status anterior?');">
+                    ↩️ Reverter
                 </a>
                 {% endif %}
 
@@ -290,8 +305,7 @@
             </div>
             <div class="flex justify-between items-center mt-2 pt-2 border-t">
                 <span class="text-gray-800 font-semibold">Total com Frete</span>
-                <span class="text-2xl font-bold text-green-600">R$ {{
-                    orcamento.valor_total|add:orcamento.valor_frete|floatformat:2 }}</span>
+                <span class="text-2xl font-bold text-green-600">R$ {{ orcamento.valor_total|add:orcamento.valor_frete|floatformat:2 }}</span>
             </div>
         </div>
         {% endif %}

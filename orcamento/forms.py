@@ -1,15 +1,37 @@
 from django import forms
-from .models import Orcamento, TipoMaterial, Batida, CoeficienteFator, TabelaPreco
+from .models import Orcamento, TipoMaterial, Batida, CoeficienteFator, TabelaPreco, Vendedor
 
 
 class OrcamentoForm(forms.ModelForm):
     """Formulário para criar/editar orçamentos"""
     
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Configurar campo Vendedor baseado no usuário
+        if self.user and hasattr(self.user, 'vendedor'):
+            if self.user.vendedor.is_gestor:
+                # Gestor vê Select com todos vendedores
+                self.fields['vendedor'].widget = forms.Select(attrs={
+                    'class': 'w-full px-4 py-2 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 bg-purple-50 text-purple-900 font-medium shadow-sm'
+                })
+                self.fields['vendedor'].queryset = Vendedor.objects.filter(ativo=True)
+            else:
+                # Vendedor comum não vê o campo (será tratado no template e view)
+                if 'vendedor' in self.fields:
+                    del self.fields['vendedor']
+        
+        # Garantir formato da data para input type="date"
+        if self.instance.pk and self.instance.data_previsao_entrega:
+            self.fields['data_previsao_entrega'].initial = self.instance.data_previsao_entrega
+
     class Meta:
         model = Orcamento
         fields = [
             'cliente', 'tipo_cliente', 'endereco', 'cidade', 'uf', 'cep',
             'telefone', 'email', 'numero_pedido', 'data_previsao_entrega',
+            'vendedor',
             'tipo_material', 'batida', 'largura_mm', 'comprimento_mm',
             'tipo_corte', 'textura', 'cor_urdume', 'quantidade_metros', 'tabela_manual_metragem',
             'acabamento', 'tem_ultrassonico',
@@ -53,14 +75,11 @@ class OrcamentoForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'placeholder': 'Número do pedido',
             }),
-            'data_previsao_entrega': forms.DateInput(attrs={
+            'data_previsao_entrega': forms.DateInput(format='%Y-%m-%d', attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'type': 'date',
             }),
-            'vendedor': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                'placeholder': 'Nome do vendedor',
-            }),
+            # 'vendedor' widget é configurado no __init__
             'tipo_material': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 '@change': 'calcularValores()',

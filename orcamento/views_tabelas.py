@@ -9,23 +9,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, View, TemplateView
 from django.db.models import Count, Q
-from .models import TipoMaterial, Batida, TabelaPreco, CoeficienteFator, ValorGoma, ValorCorte, Configuracao, Textura, TipoCorte, Acabamento
+from .models import TipoMaterial, Batida, TabelaPreco, CoeficienteFator, ValorGoma, ValorCorte, Configuracao, Textura, TipoCorte, Acabamento, PrecoAcabamento
 from .forms import TipoMaterialForm, BatidaForm, CoeficienteFatorForm, TabelaPrecoForm
-
-
-def is_gestor_or_superuser(user):
-    """Verifica se o usuário é gestor ou superusuário"""
-    return user.is_superuser or user.groups.filter(name='Gestor').exists()
-
-
-class GestorRequiredMixin(UserPassesTestMixin):
-    """Mixin para requerer que o usuário seja gestor ou superusuário"""
-    def test_func(self):
-        return is_gestor_or_superuser(self.request.user)
-    
-    def handle_no_permission(self):
-        messages.error(self.request, 'Você não tem permissão para acessar esta área.')
-        return redirect('orcamento:index')
+from .forms_tabelas import AcabamentoForm, PrecoAcabamentoForm
+from .views_tabelas_pivot import AcabamentoPivotView
+from .mixins import GestorRequiredMixin, is_gestor_or_superuser
 
 
 @login_required
@@ -527,3 +515,105 @@ class TabelaPrecoPivotView(LoginRequiredMixin, GestorRequiredMixin, TemplateView
         context['pivot_data'] = pivot_data
         
         return context
+
+
+# ================== ACABAMENTOS ==================
+
+class AcabamentoListView(LoginRequiredMixin, GestorRequiredMixin, ListView):
+    """Lista acabamentos"""
+    model = Acabamento
+    template_name = 'orcamento/tabelas/acabamento_list.html'
+    context_object_name = 'acabamentos'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Acabamento.objects.order_by('ordem', 'nome')
+        
+        busca = self.request.GET.get('busca')
+        if busca:
+            queryset = queryset.filter(
+                Q(nome__icontains=busca) | Q(codigo__icontains=busca)
+            )
+        
+        status = self.request.GET.get('status')
+        if status == 'ativo':
+            queryset = queryset.filter(ativo=True)
+        elif status == 'inativo':
+            queryset = queryset.filter(ativo=False)
+            
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['busca'] = self.request.GET.get('busca', '')
+        context['status'] = self.request.GET.get('status', '')
+        return context
+
+
+class AcabamentoCreateView(LoginRequiredMixin, GestorRequiredMixin, CreateView):
+    """Criar novo acabamento"""
+    model = Acabamento
+    form_class = AcabamentoForm
+    template_name = 'orcamento/tabelas/acabamento_form.html'
+    success_url = reverse_lazy('orcamento:acabamento_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Acabamento "{form.instance.nome}" criado com sucesso!')
+        return super().form_valid(form)
+
+
+class AcabamentoUpdateView(LoginRequiredMixin, GestorRequiredMixin, UpdateView):
+    """Editar acabamento"""
+    model = Acabamento
+    form_class = AcabamentoForm
+    template_name = 'orcamento/tabelas/acabamento_form.html'
+    success_url = reverse_lazy('orcamento:acabamento_list')
+    
+    def form_valid(self, form):
+        messages.success(self.request, f'Acabamento "{form.instance.nome}" atualizado com sucesso!')
+        return super().form_valid(form)
+
+
+class AcabamentoDeleteView(LoginRequiredMixin, GestorRequiredMixin, DeleteView):
+    """Deletar acabamento"""
+    model = Acabamento
+    template_name = 'orcamento/tabelas/acabamento_confirm_delete.html'
+    success_url = reverse_lazy('orcamento:acabamento_list')
+    
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+        messages.success(request, f'Acabamento "{obj.nome}" deletado com sucesso!')
+        return super().delete(request, *args, **kwargs)
+
+
+# ================== PREÇOS DE ACABAMENTO ==================
+
+class PrecoAcabamentoCreateView(LoginRequiredMixin, GestorRequiredMixin, View):
+    """Criar preço de acabamento (via modal na tela de edição)"""
+    
+    def post(self, request, acabamento_id):
+        acabamento = get_object_or_404(Acabamento, pk=acabamento_id)
+        
+        try:
+            PrecoAcabamento.objects.create(
+                acabamento=acabamento,
+                largura_mm=request.POST.get('largura_mm'),
+                preco=request.POST.get('preco')
+            )
+            messages.success(request, 'Preço adicionado com sucesso!')
+        except Exception as e:
+            messages.error(request, f'Erro ao adicionar preço: {e}')
+            
+        return redirect('orcamento:acabamento_update', pk=acabamento_id)
+
+
+class PrecoAcabamentoDeleteView(LoginRequiredMixin, GestorRequiredMixin, DeleteView):
+    """Deletar preço de acabamento"""
+    model = PrecoAcabamento
+    
+    def delete(self, request, *args, **kwargs):
+        preco = self.get_object()
+        acabamento_id = preco.acabamento.id
+        preco.delete()
+        messages.success(request, 'Preço removido com sucesso!')
+        return redirect('orcamento:acabamento_update', pk=acabamento_id)
