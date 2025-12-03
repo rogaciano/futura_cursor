@@ -14,7 +14,7 @@ import json
 from .models import (
     Orcamento, TipoMaterial, TipoCorte, TabelaPreco,
     CoeficienteFator, ValorGoma, Textura, Vendedor, CorOrcamento,
-    HistoricoStatusOrcamento
+    HistoricoStatusOrcamento, Batida
 )
 from .forms import OrcamentoForm
 
@@ -213,7 +213,7 @@ class OrcamentoCreateView(LoginRequiredMixin, CreateView):
             # Remover cores antigas se estiver editando
             orcamento.cores.all().delete()
             
-            # Salvar cores da 1ª densidade
+            # Salvar cores
             for i, cor in enumerate(cores_json.get('cores1', [])):
                 if cor.get('codigo'):  # Só salva se tiver código
                     CorOrcamento.objects.create(
@@ -225,20 +225,6 @@ class OrcamentoCreateView(LoginRequiredMixin, CreateView):
                         quantidade_demais=int(cor.get('demais', 0)),
                         ordem=i
                     )
-            
-            # Salvar cores da 2ª densidade (se for Dupla Densidade)
-            if orcamento.is_dupla_densidade:
-                for i, cor in enumerate(cores_json.get('cores2', [])):
-                    if cor.get('codigo'):  # Só salva se tiver código
-                        CorOrcamento.objects.create(
-                            orcamento=orcamento,
-                            posicao=cor.get('posicao', 'Fd'),
-                            densidade='2',
-                            codigo_cor=cor.get('codigo', ''),
-                            quantidade_unidades=int(cor.get('unidades', 0)),
-                            quantidade_demais=int(cor.get('demais', 0)),
-                            ordem=i
-                        )
         except (json.JSONDecodeError, ValueError) as e:
             # Log do erro mas não impede o salvamento do orçamento
             print(f"Erro ao processar cores: {e}")
@@ -374,7 +360,7 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
             # Remover cores antigas
             orcamento.cores.all().delete()
             
-            # Salvar cores da 1ª densidade
+            # Salvar cores
             for i, cor in enumerate(cores_json.get('cores1', [])):
                 if cor.get('codigo'):  # Só salva se tiver código
                     CorOrcamento.objects.create(
@@ -386,20 +372,6 @@ class OrcamentoUpdateView(LoginRequiredMixin, UpdateView):
                         quantidade_demais=int(cor.get('demais', 0)),
                         ordem=i
                     )
-            
-            # Salvar cores da 2ª densidade (se for Dupla Densidade)
-            if orcamento.is_dupla_densidade:
-                for i, cor in enumerate(cores_json.get('cores2', [])):
-                    if cor.get('codigo'):  # Só salva se tiver código
-                        CorOrcamento.objects.create(
-                            orcamento=orcamento,
-                            posicao=cor.get('posicao', 'Fd'),
-                            densidade='2',
-                            codigo_cor=cor.get('codigo', ''),
-                            quantidade_unidades=int(cor.get('unidades', 0)),
-                            quantidade_demais=int(cor.get('demais', 0)),
-                            ordem=i
-                        )
         except (json.JSONDecodeError, ValueError) as e:
             # Log do erro mas não impede o salvamento do orçamento
             print(f"Erro ao processar cores: {e}")
@@ -766,3 +738,102 @@ def reverter_status_orcamento(request, pk):
     
     messages.success(request, f'Status revertido com sucesso para {orcamento.get_status_display()}!')
     return redirect('orcamento:orcamento_detail', pk=pk)
+
+
+def obter_info_material(request, material_id):
+    """
+    Retorna informações sobre um tipo de material específico (JSON)
+    Usado para verificar se é Dupla Densidade
+    """
+    try:
+        material = TipoMaterial.objects.get(pk=material_id)
+        return JsonResponse({
+            'id': material.id,
+            'nome': material.nome,
+            'codigo': material.codigo,
+            'dupla_densidade': material.dupla_densidade,
+            'ativo': material.ativo
+        })
+    except TipoMaterial.DoesNotExist:
+        return JsonResponse({'error': 'Material não encontrado'}, status=404)
+
+
+# ============ CRUD BATIDAS ============
+
+class BatidaListView(LoginRequiredMixin, ListView):
+    """Lista de batidas"""
+    model = Batida
+    template_name = 'orcamento/batida_list.html'
+    context_object_name = 'batidas'
+    paginate_by = 50
+    login_url = 'orcamento:login'
+
+    def get_queryset(self):
+        queryset = Batida.objects.select_related('tipo_material').order_by('tipo_material__nome', 'ordem', 'numero_batidas')
+
+        # Filtros
+        tipo_material = self.request.GET.get('tipo_material')
+        if tipo_material:
+            queryset = queryset.filter(tipo_material_id=tipo_material)
+
+        ativo = self.request.GET.get('ativo')
+        if ativo:
+            queryset = queryset.filter(ativo=ativo == 'true')
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tipos_material'] = TipoMaterial.objects.filter(ativo=True).order_by('nome')
+        return context
+
+
+class BatidaCreateView(LoginRequiredMixin, CreateView):
+    """Criar nova batida"""
+    model = Batida
+    template_name = 'orcamento/batida_form.html'
+    fields = ['tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
+    success_url = reverse_lazy('orcamento:batida_list')
+    login_url = 'orcamento:login'
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Batida criada com sucesso!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Nova Batida'
+        context['button_text'] = 'Criar'
+        return context
+
+
+class BatidaUpdateView(LoginRequiredMixin, UpdateView):
+    """Editar batida existente"""
+    model = Batida
+    template_name = 'orcamento/batida_form.html'
+    fields = ['tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
+    success_url = reverse_lazy('orcamento:batida_list')
+    login_url = 'orcamento:login'
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Batida atualizada com sucesso!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Editar Batida'
+        context['button_text'] = 'Salvar'
+        return context
+
+
+@login_required
+def batida_delete(request, pk):
+    """Deletar batida"""
+    batida = get_object_or_404(Batida, pk=pk)
+
+    if request.method == 'POST':
+        batida.delete()
+        messages.success(request, 'Batida excluída com sucesso!')
+        return redirect('orcamento:batida_list')
+
+    return render(request, 'orcamento/batida_confirm_delete.html', {'batida': batida})

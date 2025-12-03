@@ -10,6 +10,10 @@ class TipoMaterial(models.Model):
     codigo = models.CharField(max_length=20, unique=True)
     ordem = models.IntegerField(default=0)
     ativo = models.BooleanField(default=True)
+    dupla_densidade = models.BooleanField(
+        default=False,
+        help_text="Indica se este material é do tipo Dupla Densidade"
+    )
     
     class Meta:
         verbose_name = 'Tipo de Material'
@@ -34,6 +38,13 @@ class Batida(models.Model):
     numero_batidas = models.IntegerField(
         validators=[MinValueValidator(1)],
         help_text="Número de batidas (ex: 20, 25, 28)"
+    )
+    fator = models.DecimalField(
+        max_digits=10,
+        decimal_places=5,
+        default=Decimal('1.0'),
+        validators=[MinValueValidator(Decimal('0.0'))],
+        help_text="Fator usado no cálculo para esta combinação de Material + Batidas"
     )
     descricao = models.CharField(
         max_length=100,
@@ -413,7 +424,7 @@ class Orcamento(models.Model):
     @property
     def is_dupla_densidade(self):
         """Verifica se o material é Dupla Densidade"""
-        return 'dupla densidade' in self.tipo_material.nome.lower() if self.tipo_material else False
+        return self.tipo_material.dupla_densidade if self.tipo_material else False
     
     def calcular_valores(self):
         """Calcula todos os valores do orçamento baseado nas regras da planilha"""
@@ -536,11 +547,12 @@ class CorOrcamento(models.Model):
         help_text="Quantas unidades desta cor"
     )
     
-    # Quantidade de demais (opcional)
+    # Quantidade de dupla densidade (opcional)
     quantidade_demais = models.IntegerField(
         default=0,
         validators=[MinValueValidator(0)],
-        help_text="Coluna '+ Demais' (opcional)"
+        verbose_name="Dupla Densidade",
+        help_text="Quantidade adicional para Dupla Densidade (habilitado apenas se o material for Dupla Densidade)"
     )
     
     # Ordem de exibição

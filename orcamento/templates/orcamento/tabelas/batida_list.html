@@ -57,6 +57,7 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nº Batidas</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fator</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ordem</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
@@ -73,6 +74,9 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-purple-100 text-purple-800">
                             {{ batida.numero_batidas }}
                         </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-700">
+                        {{ batida.fator }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ batida.descricao }}
@@ -95,8 +99,8 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="px-6 py-10 text-center text-gray-500">
-                        Nenhuma batida encontrada. 
+                    <td colspan="7" class="px-6 py-10 text-center text-gray-500">
+                        Nenhuma batida encontrada.
                         <a href="{% url 'orcamento:batida_create' %}" class="text-purple-600 hover:text-purple-800">Adicionar primeira batida</a>
                     </td>
                 </tr>

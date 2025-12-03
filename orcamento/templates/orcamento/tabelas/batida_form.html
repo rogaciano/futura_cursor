@@ -17,18 +17,24 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Material *</label>
                     {{ form.tipo_material }}
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Número de Batidas *</label>
                     {{ form.numero_batidas }}
                     <p class="mt-1 text-sm text-gray-500">Ex: 20, 25, 28, 30</p>
                 </div>
-                
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fator *</label>
+                    {{ form.fator }}
+                    <p class="mt-1 text-sm text-gray-500">Fator usado no cálculo (ex: 1.0, 1.5, 2.0)</p>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Ordem</label>
                     {{ form.ordem }}
                 </div>
-                
+
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
                     {{ form.descricao }}

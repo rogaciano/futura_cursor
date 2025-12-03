@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - {{ SYSTEM_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">{{ title }}</h1>
+        </div>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Tipo de Material -->
+            <div>
+                <label for="{{ form.tipo_material.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Tipo de Material *
+                </label>
+                {{ form.tipo_material }}
+                {% if form.tipo_material.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.tipo_material.errors }}
+                </div>
+                {% endif %}
+                {% if form.tipo_material.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.tipo_material.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Número de Batidas -->
+            <div>
+                <label for="{{ form.numero_batidas.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Número de Batidas *
+                </label>
+                {{ form.numero_batidas }}
+                {% if form.numero_batidas.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.numero_batidas.errors }}
+                </div>
+                {% endif %}
+                {% if form.numero_batidas.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.numero_batidas.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Fator -->
+            <div>
+                <label for="{{ form.fator.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Fator *
+                </label>
+                {{ form.fator }}
+                {% if form.fator.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.fator.errors }}
+                </div>
+                {% endif %}
+                {% if form.fator.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.fator.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Descrição -->
+            <div>
+                <label for="{{ form.descricao.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Descrição
+                </label>
+                {{ form.descricao }}
+                {% if form.descricao.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.descricao.errors }}
+                </div>
+                {% endif %}
+                {% if form.descricao.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.descricao.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Ordem -->
+            <div>
+                <label for="{{ form.ordem.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                    Ordem
+                </label>
+                {{ form.ordem }}
+                {% if form.ordem.errors %}
+                <div class="mt-1 text-sm text-red-600">
+                    {{ form.ordem.errors }}
+                </div>
+                {% endif %}
+                {% if form.ordem.help_text %}
+                <p class="mt-1 text-sm text-gray-500">{{ form.ordem.help_text }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Ativo -->
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    {{ form.ativo }}
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="{{ form.ativo.id_for_label }}" class="font-medium text-gray-700">Ativo</label>
+                    {% if form.ativo.help_text %}
+                    <p class="text-gray-500">{{ form.ativo.help_text }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Botões -->
+            <div class="flex justify-between pt-6 border-t border-gray-200">
+                <a href="{% url 'orcamento:batida_list' %}"
+                    class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    Cancelar
+                </a>
+                <button type="submit"
+                    class="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
+                    {{ button_text }}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Estilos para os campos do formulário */
+    form input[type="number"],
+    form input[type="text"],
+    form select {
+        width: 100%;
+        padding: 0.5rem 1rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    form input[type="number"]:focus,
+    form input[type="text"]:focus,
+    form select:focus {
+        outline: none;
+        border-color: #3b82f6;
+        ring: 2px;
+        ring-color: #3b82f6;
+    }
+
+    form input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 0.25rem;
+        border: 1px solid #d1d5db;
+    }
+</style>
+{% endblock %}

@@ -71,4 +71,5 @@ urlpatterns = [
     path('api/precos-material/<int:material_id>/', views.obter_precos_material, name='precos_material'),
     path('api/material/<int:material_id>/batidas/', views.obter_batidas_material, name='batidas_material'),
     path('api/material/<int:material_id>/opcoes-batidas/', views.obter_opcoes_batidas, name='opcoes_batidas'),
+    path('api/material/<int:material_id>/info/', views.obter_info_material, name='info_material'),
 ]

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - {{ SYSTEM_NAME }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Confirmar Exclusão</h1>
+        </div>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        Você está prestes a excluir esta batida. Esta ação não pode ser desfeita.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-lg p-4 mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Detalhes da Batida:</h2>
+            <dl class="space-y-2">
+                <div class="flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Tipo de Material:</dt>
+                    <dd class="text-sm text-gray-900">{{ batida.tipo_material.nome }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Número de Batidas:</dt>
+                    <dd class="text-sm text-gray-900">{{ batida.numero_batidas }}</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Fator:</dt>
+                    <dd class="text-sm text-gray-900">{{ batida.fator }}</dd>
+                </div>
+                {% if batida.descricao %}
+                <div class="flex justify-between">
+                    <dt class="text-sm font-medium text-gray-500">Descrição:</dt>
+                    <dd class="text-sm text-gray-900">{{ batida.descricao }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+
+        <form method="post" class="flex justify-between">
+            {% csrf_token %}
+            <a href="{% url 'orcamento:batida_list' %}"
+                class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                Cancelar
+            </a>
+            <button type="submit"
+                class="bg-red-600 text-white px-8 py-2 rounded-lg hover:bg-red-700 transition font-semibold">
+                Sim, Excluir
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

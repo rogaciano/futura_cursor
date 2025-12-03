@@ -121,7 +121,7 @@ class CalculadoraOrcamento:
         """
         largura = self.orcamento.largura_mm
 
-        if 'dupla densidade' in self.orcamento.tipo_material.nome.lower():
+        if self.orcamento.tipo_material.dupla_densidade:
             return largura // 2
 
         return largura
@@ -188,6 +188,15 @@ class CalculadoraOrcamento:
         Padrão: 0.330 se não configurado
         """
         return self.configs.get('coeficiente_metragem_cm', Decimal('0.330'))
+
+    def _obter_fator_batida(self) -> Decimal:
+        """
+        Obtém o fator da batida selecionada no orçamento
+        Se não houver batida selecionada, retorna 1.0
+        """
+        if self.orcamento.batida:
+            return self.orcamento.batida.fator
+        return Decimal('1.0')
 
     def calcular(self) -> Dict[str, Decimal]:
         """
@@ -274,6 +283,11 @@ class CalculadoraOrcamento:
             fator_ajuste_densidade = ((densidade_cores_fita + valor_goma) *
                                       Decimal(comprimento_mm)) / coef_fator
 
+        # NOVO CÁLCULO: Fator Ajuste Densidade Ponderado
+        # Fórmula: Fator Ajuste Densidade × Fator da Batida
+        fator_batida = self._obter_fator_batida()
+        fator_ajuste_densidade_ponderado = fator_ajuste_densidade * fator_batida
+
         # Adicionar corte especial (canvas/cetim)
         valor_corte_especial = self._obter_valor_corte_especial()
         valor_metro_base = valor_metro_base + valor_corte_especial
@@ -358,6 +372,10 @@ class CalculadoraOrcamento:
                     'valor': f"{valor_goma}"},
                 {'label': 'Fator Ajuste Densidade',
                     'valor': f"{fator_ajuste_densidade:.9f}"},
+                {'label': 'Fator Batida (Tabela)',
+                    'valor': f"{fator_batida}"},
+                {'label': 'Fator Ajuste Densidade Ponderado',
+                    'valor': f"{fator_ajuste_densidade_ponderado:.9f}"},
                 {'label': 'Valor Corte Especial',
                     'valor': f"R$ {valor_corte_especial:.5f}"},
                 {'label': 'Fator Largura 60', 'valor': f"{fator_largura_60}"},

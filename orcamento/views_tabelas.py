@@ -91,7 +91,7 @@ class TipoMaterialCreateView(LoginRequiredMixin, GestorRequiredMixin, CreateView
     """Criar novo tipo de material"""
     model = TipoMaterial
     template_name = 'orcamento/tabelas/tipomaterial_form.html'
-    fields = ['nome', 'codigo', 'ordem', 'ativo']
+    fields = ['nome', 'codigo', 'ordem', 'dupla_densidade', 'ativo']
     success_url = reverse_lazy('orcamento:tipomaterial_list')
     
     def form_valid(self, form):
@@ -103,7 +103,7 @@ class TipoMaterialUpdateView(LoginRequiredMixin, GestorRequiredMixin, UpdateView
     """Editar tipo de material"""
     model = TipoMaterial
     template_name = 'orcamento/tabelas/tipomaterial_form.html'
-    fields = ['nome', 'codigo', 'ordem', 'ativo']
+    fields = ['nome', 'codigo', 'ordem', 'dupla_densidade', 'ativo']
     success_url = reverse_lazy('orcamento:tipomaterial_list')
     
     def get_context_data(self, **kwargs):
@@ -179,7 +179,7 @@ class BatidaCreateView(LoginRequiredMixin, GestorRequiredMixin, CreateView):
     """Criar nova batida"""
     model = Batida
     template_name = 'orcamento/tabelas/batida_form.html'
-    fields = ['tipo_material', 'numero_batidas', 'descricao', 'ordem', 'ativo']
+    fields = ['tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
     success_url = reverse_lazy('orcamento:batida_list')
     
     def form_valid(self, form):
@@ -194,7 +194,7 @@ class BatidaUpdateView(LoginRequiredMixin, GestorRequiredMixin, UpdateView):
     """Editar batida"""
     model = Batida
     template_name = 'orcamento/tabelas/batida_form.html'
-    fields = ['tipo_material', 'numero_batidas', 'descricao', 'ordem', 'ativo']
+    fields = ['tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
     success_url = reverse_lazy('orcamento:batida_list')
     
     def form_valid(self, form):

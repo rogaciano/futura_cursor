@@ -163,7 +163,7 @@ class TipoMaterialForm(forms.ModelForm):
     """Formulário para Tipo de Material"""
     class Meta:
         model = TipoMaterial
-        fields = ['nome', 'codigo', 'ordem', 'ativo']
+        fields = ['nome', 'codigo', 'ordem', 'dupla_densidade', 'ativo']
         widgets = {
             'nome': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
@@ -177,6 +177,9 @@ class TipoMaterialForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
                 'min': '0'
             }),
+            'dupla_densidade': forms.CheckboxInput(attrs={
+                'class': 'w-4 h-4 text-yellow-600 rounded focus:ring-2 focus:ring-yellow-500'
+            }),
             'ativo': forms.CheckboxInput(attrs={
                 'class': 'w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500'
             }),
@@ -187,7 +190,7 @@ class BatidaForm(forms.ModelForm):
     """Formulário para Batida"""
     class Meta:
         model = Batida
-        fields = ['tipo_material', 'numero_batidas', 'descricao', 'ordem', 'ativo']
+        fields = ['tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
         widgets = {
             'tipo_material': forms.Select(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
@@ -196,6 +199,12 @@ class BatidaForm(forms.ModelForm):
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
                 'placeholder': 'Ex: 20, 25, 28',
                 'min': '1'
+            }),
+            'fator': forms.NumberInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',
+                'placeholder': '1.0',
+                'step': '0.00001',
+                'min': '0'
             }),
             'descricao': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500',

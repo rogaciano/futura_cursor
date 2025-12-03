@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Batidas - {{ SYSTEM_NAME }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header com Filtros -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-3xl font-bold text-gray-800">Batidas</h1>
+            <a href="{% url 'orcamento:batida_create' %}"
+                class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition font-semibold">
+                + Nova Batida
+            </a>
+        </div>
+
+        <!-- Filtros -->
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Material</label>
+                <select name="tipo_material"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Todos</option>
+                    {% for material in tipos_material %}
+                    <option value="{{ material.id }}" {% if request.GET.tipo_material == material.id|stringformat:"s" %}selected{% endif %}>
+                        {{ material.nome }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="ativo"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Todos</option>
+                    <option value="true" {% if request.GET.ativo == 'true' %}selected{% endif %}>Ativos</option>
+                    <option value="false" {% if request.GET.ativo == 'false' %}selected{% endif %}>Inativos</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold">
+                    Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela de Batidas -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tipo de Material</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Número de Batidas</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Fator</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Descrição</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ordem</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for batida in batidas %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                {{ batida.tipo_material.nome }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700 font-semibold">
+                            {{ batida.numero_batidas }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ batida.fator }}
+                        </td>
+                        <td class="px-4 py-4 text-sm text-gray-500">
+                            {{ batida.descricao|default:"—" }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ batida.ordem }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                            {% if batida.ativo %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 font-semibold">
+                                Ativo
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800 font-semibold">
+                                Inativo
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm">
+                            <div class="flex justify-end space-x-2">
+                                <a href="{% url 'orcamento:batida_update' batida.pk %}"
+                                    class="text-green-600 hover:text-green-800 p-1.5 rounded-full hover:bg-green-50 transition"
+                                    title="Editar batida">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                </a>
+                                <a href="{% url 'orcamento:batida_delete' batida.pk %}"
+                                    class="text-red-600 hover:text-red-800 p-1.5 rounded-full hover:bg-red-50 transition"
+                                    title="Excluir batida">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            Nenhuma batida encontrada.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginação -->
+        {% if is_paginated %}
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-700">
+                    Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ paginator.count }} resultados
+                </div>
+                <div class="flex gap-2">
+                    {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}"
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                        Anterior
+                    </a>
+                    {% endif %}
+
+                    <span class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                        {{ page_obj.number }}
+                    </span>
+
+                    {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}"
+                        class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                        Próxima
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

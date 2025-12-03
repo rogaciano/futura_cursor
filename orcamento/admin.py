@@ -12,48 +12,41 @@ class BatidaInline(admin.TabularInline):
     """Inline para gerenciar batidas de cada material"""
     model = Batida
     extra = 1
-    fields = ['numero_batidas', 'descricao', 'ordem', 'ativo']
+    fields = ['numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
     ordering = ['ordem', 'numero_batidas']
 
 
 @admin.register(TipoMaterial)
 class TipoMaterialAdmin(admin.ModelAdmin):
-    list_display = ['nome', 'codigo', 'ordem', 'get_batidas_disponiveis', 'ativo']
-    list_editable = ['ordem', 'ativo']
+    list_display = ['nome', 'codigo', 'ordem', 'dupla_densidade', 'ativo']
+    list_editable = ['ordem', 'dupla_densidade', 'ativo']
     search_fields = ['nome', 'codigo']
-    list_filter = ['ativo']
+    list_filter = ['ativo', 'dupla_densidade']
     ordering = ['ordem', 'nome']
     inlines = [BatidaInline]
-    
+
     fieldsets = (
         ('Informações Básicas', {
-            'fields': ('nome', 'codigo', 'ordem', 'ativo'),
-            'description': 'Defina as batidas disponíveis para este material na seção abaixo.'
+            'fields': ('nome', 'codigo', 'ordem', 'dupla_densidade', 'ativo'),
+            'description': 'Marque "Dupla Densidade" se este material suporta duas densidades de cores. Defina as batidas disponíveis para este material na seção abaixo.'
         }),
     )
-    
-    def get_batidas_disponiveis(self, obj):
-        """Mostra as batidas disponíveis para o material"""
-        batidas = obj.batidas.filter(ativo=True).values_list('numero_batidas', flat=True)
-        if batidas:
-            return ', '.join(f"{b}" for b in batidas)
-        return "—"
-    get_batidas_disponiveis.short_description = "Batidas Disponíveis"
 
 
 @admin.register(Batida)
 class BatidaAdmin(admin.ModelAdmin):
-    list_display = ['tipo_material', 'numero_batidas', 'descricao', 'ordem', 'ativo']
-    list_editable = ['numero_batidas', 'descricao', 'ordem', 'ativo']
+    list_display = ['tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
+    list_editable = ['numero_batidas', 'fator', 'descricao', 'ordem', 'ativo']
     list_filter = ['tipo_material', 'ativo']
     search_fields = ['tipo_material__nome', 'descricao']
     ordering = ['tipo_material', 'ordem', 'numero_batidas']
-    
+
     fieldsets = (
         (None, {
-            'fields': ('tipo_material', 'numero_batidas', 'descricao', 'ordem', 'ativo'),
+            'fields': ('tipo_material', 'numero_batidas', 'fator', 'descricao', 'ordem', 'ativo'),
             'description': 'Cada material pode ter várias opções de batidas. '
-                         'Ex: Tafetá pode ter 20, 25 ou 28 batidas.'
+                         'Ex: Tafetá pode ter 20, 25 ou 28 batidas. '
+                         'O fator é usado nos cálculos para essa combinação de Material + Batidas.'
         }),
     )
 
